@@ -446,6 +446,43 @@
     .sched-footer { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .sched-privacy { font-size: .78rem; color: var(--muted); flex: 1; }
 
+    /* ── FAMILY TAG ── */
+    .family-tag-section { display: none; }
+    .family-tag-section.show { display: grid; gap: 8px; }
+    .family-tag-section > .section-label {
+      font-size: .85rem; font-weight: 700; color: var(--ink);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .family-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+    .family-chip {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border: 1.5px solid var(--line);
+      border-radius: 20px; cursor: pointer; user-select: none;
+      font-size: .82rem; font-weight: 700; background: white;
+      transition: border-color .15s, background .15s;
+    }
+    .family-chip:has(input:checked) { border-color: var(--purple); background: var(--soft); color: var(--purple-dark); }
+    .family-chip input { display: none; }
+    .family-chip-avatar {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: white; font-size: .65rem; font-weight: 900;
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+
+    /* Family manage dialog */
+    .family-member-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 0; border-bottom: 1px solid var(--line);
+    }
+    .family-member-row:last-child { border-bottom: none; }
+    .family-member-info { flex: 1; min-width: 0; }
+    .family-member-name { font-weight: 700; font-size: .92rem; }
+    .family-member-fb { font-size: .78rem; color: var(--muted); }
+    .family-add-form { display: grid; gap: 8px; }
+    .family-add-row { display: flex; gap: 8px; }
+    .family-add-row input { flex: 1; min-width: 0; }
+
     /* Countdown banner */
     .countdown-banner {
       position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%);
@@ -988,6 +1025,15 @@
             <label class="platform-item"><input type="checkbox" class="sched-platform" value="twitter"><span class="platform-name">🐦 X / Twitter</span></label>
           </div>
         </div>
+        <div class="family-tag-section" id="familyTagSection">
+          <div class="section-label">
+            <span>👨‍👩‍👧 Tag Family Members</span>
+            <button class="button secondary" style="min-height:28px;font-size:.75rem;padding:0 10px" type="button" id="manageFamilyBtn">Manage List</button>
+          </div>
+          <div class="family-grid" id="familyChips">
+            <span style="font-size:.82rem;color:var(--muted)">No family members yet — tap Manage List to add.</span>
+          </div>
+        </div>
         <div class="form-grid">
           <label>Date &amp; Time<input id="schedDatetime" type="datetime-local"></label>
           <label>Privacy
@@ -1006,6 +1052,32 @@
     </form>
   </dialog>
 
+  <!-- Family Management dialog -->
+  <dialog id="familyDialog">
+    <form method="dialog">
+      <div class="modal-head">
+        <h2>Family Members</h2>
+        <button class="icon-button" value="cancel" type="submit" title="Close">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="margin:0;font-size:.85rem;color:var(--muted)">Add family members here. Their @Facebook name will be included in the caption so they're easy to tag when you post.</p>
+        <div class="family-add-form">
+          <div class="family-add-row">
+            <input id="familyNameInput" type="text" placeholder="Name (e.g. Ate Marie)">
+            <input id="familyFbInput" type="text" placeholder="@facebook.name (optional)">
+          </div>
+          <button class="button" id="addFamilyMemberBtn" value="default" type="button">+ Add Member</button>
+        </div>
+        <div id="familyMemberList" style="margin-top:4px"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="button" value="cancel" type="submit">Done</button>
+      </div>
+    </form>
+  </dialog>
+
   <!-- Countdown banner -->
   <div class="countdown-banner" id="countdownBanner">
     <svg style="width:18px;height:18px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
@@ -1018,6 +1090,7 @@
     const DB_NAME = 'mom-video-organizer';
     const STORE = 'videos';
     const SCHED_STORE = 'schedules';
+    const FAMILY_STORE = 'family';
     const els = {
       input:            document.querySelector('#videoInput'),
       content:          document.querySelector('#content'),
@@ -1073,6 +1146,14 @@
       schedContent:     document.querySelector('#schedContent'),
       countdownBanner:  document.querySelector('#countdownBanner'),
       countdownText:    document.querySelector('#countdownText'),
+      familyTagSection: document.querySelector('#familyTagSection'),
+      familyChips:      document.querySelector('#familyChips'),
+      familyDialog:     document.querySelector('#familyDialog'),
+      familyMemberList: document.querySelector('#familyMemberList'),
+      familyNameInput:  document.querySelector('#familyNameInput'),
+      familyFbInput:    document.querySelector('#familyFbInput'),
+      addFamilyMember:  document.querySelector('#addFamilyMemberBtn'),
+      manageFamilyBtn:  document.querySelector('#manageFamilyBtn'),
     };
 
     let db;
@@ -1081,11 +1162,12 @@
 
     function openDb() {
       return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, 2);
+        const req = indexedDB.open(DB_NAME, 3);
         req.onupgradeneeded = e => {
           const d = req.result;
           if (!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE, { keyPath: 'id' });
           if (!d.objectStoreNames.contains(SCHED_STORE)) d.createObjectStore(SCHED_STORE, { keyPath: 'id' });
+          if (!d.objectStoreNames.contains(FAMILY_STORE)) d.createObjectStore(FAMILY_STORE, { keyPath: 'id' });
         };
         req.onsuccess = () => resolve(req.result);
         req.onerror = () => reject(req.error);
@@ -1108,6 +1190,19 @@
     }
     function deleteScheduleById(id) {
       return new Promise((res, rej) => { const r = txS('readwrite').delete(id); r.onsuccess = () => res(); r.onerror = () => rej(r.error); });
+    }
+
+    function txF(mode = 'readonly') {
+      return db.transaction(FAMILY_STORE, mode).objectStore(FAMILY_STORE);
+    }
+    function getAllFamily() {
+      return new Promise((res, rej) => { const r = txF().getAll(); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+    }
+    function putFamilyMember(m) {
+      return new Promise((res, rej) => { const r = txF('readwrite').put(m); r.onsuccess = () => res(); r.onerror = () => rej(r.error); });
+    }
+    function deleteFamilyMember(id) {
+      return new Promise((res, rej) => { const r = txF('readwrite').delete(id); r.onsuccess = () => res(); r.onerror = () => rej(r.error); });
     }
 
     function getAllVideos() {
@@ -1412,6 +1507,59 @@
       }
     }
 
+    /* ── FAMILY ── */
+    async function renderFamilyChips(selectedIds = []) {
+      const members = await getAllFamily();
+      if (!members.length) {
+        els.familyChips.innerHTML = '<span style="font-size:.82rem;color:var(--muted)">No family members yet — tap Manage List to add.</span>';
+        return;
+      }
+      els.familyChips.innerHTML = members.map(m => `
+        <label class="family-chip">
+          <input type="checkbox" class="family-tag-cb" value="${m.id}" ${selectedIds.includes(m.id) ? 'checked' : ''}>
+          <span class="family-chip-avatar">${m.name.slice(0,1).toUpperCase()}</span>
+          ${escapeHtml(m.name)}
+        </label>`).join('');
+    }
+
+    async function renderFamilyMemberList() {
+      const members = await getAllFamily();
+      if (!members.length) {
+        els.familyMemberList.innerHTML = '<p style="font-size:.85rem;color:var(--muted);margin:8px 0">No members added yet.</p>';
+        return;
+      }
+      els.familyMemberList.innerHTML = members.map(m => `
+        <div class="family-member-row">
+          <div class="family-chip-avatar" style="width:32px;height:32px;font-size:.8rem;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));color:white;display:grid;place-items:center;font-weight:900;flex-shrink:0">${m.name.slice(0,1).toUpperCase()}</div>
+          <div class="family-member-info">
+            <div class="family-member-name">${escapeHtml(m.name)}</div>
+            ${m.fbName ? `<div class="family-member-fb">@${escapeHtml(m.fbName)}</div>` : ''}
+          </div>
+          <button class="button secondary" style="min-height:30px;font-size:.75rem;padding:0 10px;background:#ffeef2;border-color:var(--coral);color:var(--coral)" type="button" data-del-family="${m.id}">Remove</button>
+        </div>`).join('');
+    }
+
+    async function addFamilyMember() {
+      const name = els.familyNameInput.value.trim();
+      if (!name) return showToast('Enter a name first.');
+      const fbName = els.familyFbInput.value.trim().replace(/^@/, '');
+      await putFamilyMember({ id: crypto.randomUUID(), name, fbName, createdAt: Date.now() });
+      els.familyNameInput.value = '';
+      els.familyFbInput.value = '';
+      renderFamilyMemberList();
+      renderFamilyChips();
+      showToast(`${name} added to family list.`);
+    }
+
+    function isFacebookPlatform() {
+      return [...document.querySelectorAll('.sched-platform:checked')]
+        .some(cb => cb.value.startsWith('facebook'));
+    }
+
+    function updateFamilyTagVisibility() {
+      els.familyTagSection.classList.toggle('show', isFacebookPlatform());
+    }
+
     /* ── SCHEDULING ── */
     const PLATFORM_LABELS = {
       'facebook-feed': '📘 Facebook Feed',
@@ -1429,14 +1577,15 @@
       els.schedDialogTitle.textContent = schedId ? 'Edit Schedule' : 'Schedule Post';
       els.saveSched.textContent = schedId ? 'Update Schedule' : 'Save Schedule';
       if (schedId) {
-        // pre-fill from existing schedule
-        getAllSchedules().then(all => {
+        getAllSchedules().then(async all => {
           const s = all.find(x => x.id === schedId);
           if (!s) return;
           els.schedCaption.value = s.caption || '';
           document.querySelectorAll('.sched-platform').forEach(cb => { cb.checked = (s.platforms || []).includes(cb.value); });
           els.schedDatetime.value = s.scheduledAt ? s.scheduledAt.slice(0,16) : '';
           els.schedPrivacy.value = s.privacy || 'public';
+          await renderFamilyChips(s.taggedFamily || []);
+          updateFamilyTagVisibility();
           els.schedDialog.showModal();
         });
       } else {
@@ -1445,6 +1594,8 @@
         const def = new Date(Date.now() + 60 * 60 * 1000);
         els.schedDatetime.value = def.toISOString().slice(0, 16);
         els.schedPrivacy.value = video.privacy === 'Friends' ? 'friends' : 'public';
+        await renderFamilyChips([]);
+        updateFamilyTagVisibility();
         els.schedDialog.showModal();
       }
     }
@@ -1459,16 +1610,28 @@
       if (!dt) return showToast('Pick a date and time.');
       const scheduledAt = new Date(dt).toISOString();
       if (new Date(scheduledAt) <= new Date()) return showToast('Choose a future date and time.');
+
+      // Collect tagged family members
+      const taggedFamilyIds = [...document.querySelectorAll('.family-tag-cb:checked')].map(c => c.value);
+      let caption = els.schedCaption.value.trim();
+      if (taggedFamilyIds.length) {
+        const allMembers = await getAllFamily();
+        const tagged = allMembers.filter(m => taggedFamilyIds.includes(m.id));
+        const mentions = tagged.map(m => m.fbName ? `@${m.fbName}` : m.name).join(' ');
+        if (mentions) caption = caption ? `${caption}\n\n${mentions}` : mentions;
+      }
+
       const editId = els.schedEditId.value;
       const s = {
         id: editId || crypto.randomUUID(),
         videoId,
         videoTitle: video.title,
         videoThumb: video.thumb || '',
-        caption: els.schedCaption.value.trim(),
+        caption,
         platforms,
         scheduledAt,
         privacy: els.schedPrivacy.value,
+        taggedFamily: taggedFamilyIds,
         status: 'pending',
         createdAt: Date.now(),
       };
@@ -1604,12 +1767,22 @@
             </div>
           </div>
           ${s.caption ? `<div class="sched-caption">${escapeHtml(s.caption)}</div>` : ''}
+          ${s.taggedFamily && s.taggedFamily.length ? `<div style="font-size:.78rem;color:var(--muted)">👨‍👩‍👧 Tagged family: <strong id="family-label-${s.id}">Loading…</strong></div>` : ''}
           <div class="sched-footer">
             <span class="sched-privacy">${{ public:'🌍 Public', friends:'👥 Friends', 'only-me':'🔒 Only Me' }[s.privacy] || ''}</span>
             ${isPending ? `<button class="button secondary" style="min-height:34px;font-size:.8rem;padding:0 12px" data-edit-sched="${s.id}">Edit</button>
             <button class="button" style="min-height:34px;font-size:.8rem;padding:0 12px;background:var(--coral)" data-cancel-sched="${s.id}">Cancel</button>` : ''}
           </div>`;
         els.schedContent.appendChild(card);
+      }
+      // Resolve family names
+      const members = await getAllFamily();
+      for (const s of all) {
+        if (!s.taggedFamily || !s.taggedFamily.length) continue;
+        const label = document.getElementById(`family-label-${s.id}`);
+        if (!label) continue;
+        const names = s.taggedFamily.map(id => members.find(m => m.id === id)?.name || '?').join(', ');
+        label.textContent = names;
       }
     }
 
@@ -1753,6 +1926,27 @@
     els.drawerOverlay.addEventListener('click', closeDrawer);
     els.skipWelcome.addEventListener('click', closeWelcome);
     els.saveSched.addEventListener('click', saveScheduleForm);
+
+    // Show/hide family tag section when Facebook platforms toggled
+    document.querySelectorAll('.sched-platform').forEach(cb => {
+      cb.addEventListener('change', updateFamilyTagVisibility);
+    });
+
+    // Manage family dialog
+    els.manageFamilyBtn.addEventListener('click', () => {
+      renderFamilyMemberList();
+      els.familyDialog.showModal();
+    });
+    els.addFamilyMember.addEventListener('click', addFamilyMember);
+    els.familyNameInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addFamilyMember(); } });
+    els.familyMemberList.addEventListener('click', async e => {
+      const btn = e.target.closest('[data-del-family]');
+      if (!btn) return;
+      if (!confirm('Remove this family member?')) return;
+      await deleteFamilyMember(btn.dataset.delFamily);
+      renderFamilyMemberList();
+      renderFamilyChips();
+    });
 
     // Edit / Cancel delegation on scheduled posts list
     els.schedContent.addEventListener('click', e => {
