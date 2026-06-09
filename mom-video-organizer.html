@@ -926,12 +926,6 @@
               </svg>
               Posted Videos
             </button>
-            <button class="drawer-button" type="button" data-drawer-action="goodbye">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/>
-              </svg>
-              Goodbye Message
-            </button>
           </section>
         </div>
         <div class="drawer-foot">Queen Nur's memories, ready for Facebook.</div>
@@ -1526,15 +1520,15 @@
       const action = btn.dataset.drawerAction;
       if (action === 'ready')   els.statusFilter.value = 'ready';
       if (action === 'posted')  els.statusFilter.value = 'posted';
-      if (action === 'goodbye') { showGoodbye(); return; }
       render();
       closeDrawer();
     });
 
-    window.addEventListener('beforeunload', e => {
-      e.preventDefault();
-      e.returnValue = 'I LOVE YOU OMONI';
+    // Show goodbye when the user navigates away or hides the app (home button, tab switch, etc.)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') showGoodbye();
     });
+    window.addEventListener('pagehide', () => showGoodbye());
 
     /* Full-page drag-and-drop */
     let dragDepth = 0;
