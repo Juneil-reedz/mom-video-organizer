@@ -1347,12 +1347,10 @@
     }
 
     .album-book-shell {
-      width: min(100%, 980px);
-      margin-inline: auto;
+      width: 100%;
       min-height: min(74dvh, 760px);
       display: grid;
       align-content: center;
-      padding: 10px max(14px, env(safe-area-inset-left, 0px)) 20px max(14px, env(safe-area-inset-right, 0px));
     }
 
     .album-shelf {
@@ -1605,7 +1603,7 @@
 
     .bookview {
       position: relative;
-      width: min(640px, calc(100vw - 48px));
+      width: min(640px, 100%); /* 100% of its flex parent — avoids vw overflow across nested padding */
       margin-inline: auto;
       aspect-ratio: 1.1 / 1; /* matches live preview so saved pages look identical */
       contain: layout paint;
