@@ -1,4 +1,4 @@
-# Mom Video Organizer
+# Queen Nur Video Organizer
 
 A simple local video organizer for preparing family clips before posting to Facebook.
 
