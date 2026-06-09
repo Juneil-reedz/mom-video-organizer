@@ -1136,6 +1136,33 @@
       flex-shrink: 0;
     }
 
+    .app-toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(var(--tab-height) + var(--safe-bottom) + 16px);
+      transform: translate(-50%, 18px);
+      z-index: 220;
+      width: min(360px, calc(100vw - 32px));
+      padding: 13px 16px;
+      border-radius: 16px;
+      background: rgba(57,41,31,.94);
+      color: white;
+      box-shadow: 0 16px 36px rgba(106,64,31,.28);
+      text-align: center;
+      font-weight: 900;
+      font-size: .9rem;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity .22s ease, transform .22s ease, visibility .22s ease;
+    }
+
+    .app-toast.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translate(-50%, 0);
+    }
+
     /* ─── Album View ─── */
 
     /* ── 3D Book ── */
@@ -2500,6 +2527,7 @@
   </div>
 </div>
 
+<div class="app-toast" id="appToast" role="status" aria-live="polite"></div>
 <canvas id="exportCanvas"></canvas>
 
 <script>
@@ -2562,6 +2590,16 @@
     localStorage.setItem('fatimaAlbumPages', JSON.stringify(state.pages));
     localStorage.setItem('fatimaAlbumCaptions', JSON.stringify(state.captions));
     localStorage.setItem('fatimaAlbumCrops', JSON.stringify(state.crops));
+  }
+
+  let toastTimer = null;
+  function showToast(message, duration = 2200) {
+    const toast = document.querySelector('#appToast');
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
   }
 
   /* ─── Image compression ─── */
@@ -2969,6 +3007,7 @@
     state.pageIndex = 0;
     persist();
     render();
+    showToast('Saved to album. You can find it in Saved Pages.');
     // Switch to album tab briefly to show the saved page
     document.querySelector('#tabAlbum').click();
   }
@@ -3189,34 +3228,41 @@
   }
 
   async function exportPageImage() {
-    const settings = pageSettings();
-    const chosen = settings.selected.map(id => state.photos.find(p => p.id === id)).filter(Boolean);
-    const canvas = els.canvas;
-    const ctx = canvas.getContext('2d');
-    canvas.width = 1400; canvas.height = 1180;
-    const bg = getComputedStyle(els.albumPage).getPropertyValue('--page-bg').trim() || '#fffaf0';
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    drawSoftCircle(ctx, 180, 160, 260, 'rgba(248,194,27,.26)');
-    drawSoftCircle(ctx, 1230, 190, 270, 'rgba(244,124,168,.18)');
-    ctx.strokeStyle = 'rgba(217,147,0,.38)';
-    ctx.setLineDash([16, 12]);
-    roundRect(ctx, 48, 48, canvas.width - 96, canvas.height - 96, 28); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = '#6a401f'; ctx.textAlign = 'center';
-    ctx.font = '800 64px Georgia'; ctx.fillText(settings.title, canvas.width / 2, 120);
-    ctx.font = '800 28px Nunito,Arial'; ctx.fillStyle = '#846a5e';
-    ctx.fillText('Fatima Jehada Asaad-Noor', canvas.width / 2, 165);
-    await drawExportSlots(ctx, chosen, Number(settings.layout), settings.frame, settings.template, settings.captions);
-    ctx.font = '900 32px Nunito,Arial'; ctx.fillStyle = '#6a401f';
-    ctx.fillText(settings.note || '', canvas.width / 2, 1100);
-    ctx.font = '64px serif';
-    const sticker = { sunflower:['🌻','🌸'], hearts:['💛','💗'], sparkle:['✨','✦'], none:['',''] }[settings.sticker];
-    ctx.fillText(sticker[0], 90, 1088); ctx.fillText(sticker[1], 1310, 105);
-    const link = document.createElement('a');
-    link.href = canvas.toDataURL('image/png');
-    link.download = `${settings.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'fatima-album-page'}.png`;
-    link.click();
+    showToast('Preparing image...');
+    try {
+      const settings = pageSettings();
+      const chosen = settings.selected.map(id => state.photos.find(p => p.id === id)).filter(Boolean);
+      const canvas = els.canvas;
+      const ctx = canvas.getContext('2d');
+      canvas.width = 1400; canvas.height = 1180;
+      const bg = getComputedStyle(els.albumPage).getPropertyValue('--page-bg').trim() || '#fffaf0';
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      drawSoftCircle(ctx, 180, 160, 260, 'rgba(248,194,27,.26)');
+      drawSoftCircle(ctx, 1230, 190, 270, 'rgba(244,124,168,.18)');
+      ctx.strokeStyle = 'rgba(217,147,0,.38)';
+      ctx.setLineDash([16, 12]);
+      roundRect(ctx, 48, 48, canvas.width - 96, canvas.height - 96, 28); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#6a401f'; ctx.textAlign = 'center';
+      ctx.font = '800 64px Georgia'; ctx.fillText(settings.title, canvas.width / 2, 120);
+      ctx.font = '800 28px Nunito,Arial'; ctx.fillStyle = '#846a5e';
+      ctx.fillText('Fatima Jehada Asaad-Noor', canvas.width / 2, 165);
+      await drawExportSlots(ctx, chosen, Number(settings.layout), settings.frame, settings.template, settings.captions);
+      ctx.font = '900 32px Nunito,Arial'; ctx.fillStyle = '#6a401f';
+      ctx.fillText(settings.note || '', canvas.width / 2, 1100);
+      ctx.font = '64px serif';
+      const sticker = { sunflower:['🌻','🌸'], hearts:['💛','💗'], sparkle:['✨','✦'], none:['',''] }[settings.sticker];
+      ctx.fillText(sticker[0], 90, 1088); ctx.fillText(sticker[1], 1310, 105);
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = `${settings.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'fatima-album-page'}.png`;
+      link.click();
+      showToast('Image saved. Check Downloads or Photos.');
+    } catch (error) {
+      console.warn('Export failed:', error);
+      showToast('Could not save image. Try again after adding photos.', 3000);
+    }
   }
 
   async function drawExportSlots(ctx, chosen, count, frameStyle, template, captions) {
