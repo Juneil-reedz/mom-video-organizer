@@ -1511,7 +1511,13 @@
     els.stayApp.addEventListener('click', hideGoodbye);
     els.finishClose.addEventListener('click', finishClose);
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
-    setTimeout(closeWelcome, 3000);
+    if (localStorage.getItem('qn_goodbye')) {
+      localStorage.removeItem('qn_goodbye');
+      // Show goodbye briefly after welcome fades so she sees the love note on every return
+      setTimeout(() => { closeWelcome(); showGoodbye(); }, 1200);
+    } else {
+      setTimeout(closeWelcome, 3000);
+    }
 
     els.applyEvent.addEventListener('click', () => {
       if (!els.quickTitle.value.trim()) return showToast('Add an event name first.');
@@ -1528,11 +1534,11 @@
       closeDrawer();
     });
 
-    // Show goodbye when the user navigates away or hides the app (home button, tab switch, etc.)
+    // When she leaves the app (home button, tab close, switch app), save a flag
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') showGoodbye();
+      if (document.visibilityState === 'hidden') localStorage.setItem('qn_goodbye', '1');
     });
-    window.addEventListener('pagehide', () => showGoodbye());
+    window.addEventListener('pagehide', () => localStorage.setItem('qn_goodbye', '1'));
 
     /* Full-page drag-and-drop */
     let dragDepth = 0;
