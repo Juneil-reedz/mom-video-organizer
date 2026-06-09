@@ -77,6 +77,29 @@
       pointer-events: none;
     }
 
+    .goodbye-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(215, 166, 58, .38), transparent 32%),
+        radial-gradient(circle at 82% 24%, rgba(216, 79, 159, .28), transparent 34%),
+        linear-gradient(135deg, #fff8fd, #f6d8ef 48%, #fff0bd);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity .35s ease, visibility .35s ease;
+    }
+
+    .goodbye-screen.show {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
     .welcome-card {
       position: relative;
       width: min(560px, 100%);
@@ -93,6 +116,33 @@
       box-shadow: 0 28px 80px rgba(95, 23, 106, .24);
       overflow: hidden;
       backdrop-filter: blur(18px);
+    }
+
+    .goodbye-card {
+      position: relative;
+      width: min(560px, 100%);
+      min-height: 390px;
+      border-radius: 8px;
+      padding: clamp(24px, 5vw, 42px);
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      gap: 16px;
+      text-align: center;
+      background: rgba(255, 255, 255, .76);
+      border: 1px solid rgba(215, 166, 58, .55);
+      box-shadow: 0 28px 80px rgba(95, 23, 106, .26);
+      overflow: hidden;
+      backdrop-filter: blur(18px);
+    }
+
+    .goodbye-card::before {
+      content: "";
+      position: absolute;
+      inset: -30%;
+      background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, .7) 49%, transparent 60%);
+      animation: welcome-glow 3s ease-in-out infinite;
+      pointer-events: none;
     }
 
     .welcome-card::before {
@@ -115,12 +165,31 @@
       z-index: 1;
     }
 
+    .goodbye-logo {
+      width: min(138px, 40vw);
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 8px;
+      background: white;
+      border: 1px solid rgba(215, 166, 58, .62);
+      box-shadow: 0 18px 44px rgba(95, 23, 106, .18), 0 0 0 8px rgba(255, 240, 189, .3);
+      z-index: 1;
+    }
+
     .welcome-card h2 {
       z-index: 1;
       margin: 0;
       color: var(--green-strong);
       font-size: clamp(1.8rem, 5vw, 3rem);
       line-height: 1.02;
+    }
+
+    .goodbye-card h2 {
+      z-index: 1;
+      margin: 0;
+      color: var(--green-strong);
+      font-size: clamp(2rem, 6vw, 3.4rem);
+      line-height: 1;
     }
 
     .welcome-card p {
@@ -132,8 +201,26 @@
       line-height: 1.6;
     }
 
+    .goodbye-card p {
+      z-index: 1;
+      max-width: 420px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
     .welcome-skip {
       z-index: 1;
+      margin-top: 6px;
+    }
+
+    .goodbye-actions {
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
       margin-top: 6px;
     }
 
@@ -1042,6 +1129,17 @@
       <button class="button secondary welcome-skip" id="skipWelcomeBtn" type="button">Enter Organizer</button>
     </div>
   </section>
+  <section class="goodbye-screen" id="goodbyeScreen" aria-label="Goodbye message">
+    <div class="goodbye-card">
+      <img class="goodbye-logo" src="queen-nur-logo.png" alt="Queen Nur logo">
+      <h2>I LOVE YOU OMONI</h2>
+      <p>Thank you for saving another memory. Come back anytime, Queen Nur.</p>
+      <div class="goodbye-actions">
+        <button class="button" id="stayAppBtn" type="button">Stay in App</button>
+        <button class="button secondary" id="finishCloseBtn" type="button">Close Tab</button>
+      </div>
+    </div>
+  </section>
   <div class="app">
     <header>
       <div class="topbar">
@@ -1116,6 +1214,10 @@
             <button class="drawer-button" type="button" data-drawer-action="list">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
               List View
+            </button>
+            <button class="drawer-button" type="button" data-drawer-action="goodbye">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+              Goodbye Message
             </button>
           </section>
         </div>
@@ -1327,7 +1429,10 @@
       drawerReady: document.querySelector('#drawerReadyCount'),
       drawerEvents: document.querySelector('#drawerEventCount'),
       welcome: document.querySelector('#welcomeScreen'),
-      skipWelcome: document.querySelector('#skipWelcomeBtn')
+      skipWelcome: document.querySelector('#skipWelcomeBtn'),
+      goodbye: document.querySelector('#goodbyeScreen'),
+      stayApp: document.querySelector('#stayAppBtn'),
+      finishClose: document.querySelector('#finishCloseBtn')
     };
     let db;
     let videos = [];
@@ -1756,6 +1861,20 @@
       els.welcome.classList.add('hidden');
     }
 
+    function showGoodbye() {
+      closeDrawer();
+      els.goodbye.classList.add('show');
+    }
+
+    function hideGoodbye() {
+      els.goodbye.classList.remove('show');
+    }
+
+    function finishClose() {
+      showToast('You can now close the tab or app.');
+      window.close();
+    }
+
     els.input.addEventListener('change', event => handleFiles(event.target.files));
     els.search.addEventListener('input', render);
     els.eventFilter.addEventListener('change', render);
@@ -1771,6 +1890,12 @@
     els.closeDrawer.addEventListener('click', closeDrawer);
     els.drawerOverlay.addEventListener('click', closeDrawer);
     els.skipWelcome.addEventListener('click', closeWelcome);
+    els.stayApp.addEventListener('click', hideGoodbye);
+    els.finishClose.addEventListener('click', finishClose);
+    window.addEventListener('beforeunload', event => {
+      event.preventDefault();
+      event.returnValue = 'I LOVE YOU OMONI';
+    });
     setTimeout(closeWelcome, 3000);
     els.drawer.addEventListener('click', event => {
       const button = event.target.closest('[data-drawer-action]');
@@ -1781,6 +1906,10 @@
       if (action === 'export') exportList();
       if (action === 'grid') view = 'grid';
       if (action === 'list') view = 'list';
+      if (action === 'goodbye') {
+        showGoodbye();
+        return;
+      }
       render();
       closeDrawer();
     });
