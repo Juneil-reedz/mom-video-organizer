@@ -291,61 +291,79 @@
       font-weight: 600;
     }
 
-    /* ─── Photo Strip ─── */
-    .photo-strip-wrap {
-      padding: 14px 16px;
+    /* ─── Photo Library Grid ─── */
+    .photo-lib-wrap {
+      padding: 16px;
     }
 
-    .photo-strip-label {
+    .photo-lib-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .photo-lib-label {
       font-size: .72rem;
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: .06em;
       color: var(--muted);
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
     }
 
-    .photo-strip {
-      display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      padding-bottom: 4px;
-    }
-
-    .photo-strip::-webkit-scrollbar { display: none; }
-
-    .photo-strip-empty {
-      width: 100%;
-      text-align: center;
-      padding: 14px 0;
+    .photo-lib-count {
+      font-size: .72rem;
+      font-weight: 700;
       color: var(--muted);
-      font-size: .84rem;
+      background: var(--brown-light);
+      border-radius: 999px;
+      padding: 2px 10px;
+    }
+
+    /* 3-col grid — easy to tap, shows many photos at once */
+    .photo-grid-inner {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: var(--glass-border) transparent;
+    }
+
+    .photo-grid-inner::-webkit-scrollbar { width: 4px; }
+    .photo-grid-inner::-webkit-scrollbar-thumb {
+      background: var(--glass-border);
+      border-radius: 999px;
+    }
+
+    .photo-grid-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 28px 0;
+      color: var(--muted);
+      font-size: .86rem;
       font-weight: 600;
     }
 
     .photo-tile {
       position: relative;
-      width: 80px;
-      height: 80px;
-      border-radius: 14px;
+      aspect-ratio: 1;
+      border-radius: 12px;
       overflow: hidden;
-      flex-shrink: 0;
       border: 2.5px solid transparent;
       background: var(--cream);
       transition: border-color .15s, box-shadow .15s, transform .12s;
       -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
     }
 
-    .photo-tile:active { transform: scale(.94); }
+    .photo-tile:active { transform: scale(.93); }
 
     .photo-tile.selected {
       border-color: var(--pink);
-      box-shadow: 0 0 0 3px rgba(244,124,168,.20);
+      box-shadow: 0 0 0 3px rgba(244,124,168,.22);
     }
 
     .photo-tile img {
@@ -359,16 +377,38 @@
       position: absolute;
       top: 5px;
       right: 5px;
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       border-radius: 999px;
       background: var(--sun);
       color: var(--brown);
       font-weight: 900;
-      font-size: .74rem;
+      font-size: .7rem;
       display: grid;
       place-items: center;
-      box-shadow: 0 4px 10px rgba(0,0,0,.16);
+      box-shadow: 0 3px 8px rgba(0,0,0,.18);
+    }
+
+    /* Selected overlay tick */
+    .photo-tile.selected::after {
+      content: "✓";
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: end start;
+      padding: 5px;
+      font-size: .7rem;
+      font-weight: 900;
+      color: white;
+      background: linear-gradient(135deg, rgba(244,124,168,.28) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* Grid actions bar */
+    .photo-lib-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
     }
 
     /* ─── Settings Accordion ─── */
@@ -412,19 +452,19 @@
     /* ─── Form Controls ─── */
     .form-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
     }
 
     .form-full { grid-column: 1 / -1; }
 
     .field {
       display: grid;
-      gap: 6px;
+      gap: 7px;
     }
 
     .field label {
-      font-size: .72rem;
+      font-size: .75rem;
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: .05em;
@@ -433,29 +473,39 @@
 
     input, select, textarea {
       width: 100%;
-      min-height: 48px;
-      border-radius: var(--radius-xs);
+      min-height: 50px;
+      border-radius: 12px;
       border: 1.5px solid var(--glass-border);
-      background: rgba(255,255,255,.88);
+      background: rgba(255,255,255,.92);
       color: var(--ink);
-      padding: 12px 14px;
+      padding: 13px 15px;
       outline: none;
       font-size: 16px;
       font-weight: 600;
       -webkit-appearance: none;
       appearance: none;
+      transition: border-color .15s, box-shadow .15s;
     }
 
     select {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23846a5e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
-      background-position: right 12px center;
-      padding-right: 38px;
+      background-position: right 14px center;
+      padding-right: 40px;
     }
 
     input:focus, select:focus, textarea:focus {
       border-color: var(--pink);
-      box-shadow: 0 0 0 3px rgba(244,124,168,.14);
+      box-shadow: 0 0 0 3px rgba(244,124,168,.16);
+      background: #fff;
+    }
+
+    /* Section dividers inside accordion */
+    .field-group-divider {
+      grid-column: 1 / -1;
+      height: 1px;
+      background: var(--glass-border);
+      margin: 2px 0;
     }
 
     /* ─── Page Preview ─── */
@@ -1588,106 +1638,42 @@
     <!-- ══════════ STUDIO VIEW ══════════ -->
     <section class="view active" id="studioView" role="main">
 
-      <!-- Upload Zone -->
+      <!-- 1. Upload + Photo Library combined card -->
       <div class="card" id="uploadSection">
         <label class="upload-zone" for="photoInput">
           <div class="upload-icon-wrap">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
           </div>
           <div class="upload-text">
-            <strong>Drop Her Pictures</strong>
-            <span>Tap to add photos from your library</span>
+            <strong>Add Her Pictures</strong>
+            <span>Tap to choose photos — or drag &amp; drop</span>
           </div>
         </label>
-      </div>
 
-      <!-- Photo Strip -->
-      <div class="card">
-        <div class="photo-strip-wrap">
-          <div class="photo-strip-label">
-            <span>Photo Library</span>
-            <button class="btn btn-ghost" id="clearSelectionBtn" type="button" style="min-height:30px;padding:0 10px;font-size:.72rem;">Clear Picks</button>
+        <!-- Photo library grid directly below upload -->
+        <div class="photo-lib-wrap" id="photoLibWrap">
+          <div class="photo-lib-header">
+            <span class="photo-lib-label">Photo Library</span>
+            <span class="photo-lib-count" id="photoLibCount">0 photos</span>
           </div>
-          <div class="photo-strip" id="photoGrid">
-            <div class="photo-strip-empty">No photos yet. Add some!</div>
+          <div class="photo-grid-inner" id="photoGrid">
+            <div class="photo-grid-empty">No photos yet — tap above to add!</div>
+          </div>
+          <div class="photo-lib-actions">
+            <button class="btn btn-ghost" id="clearSelectionBtn" type="button" style="flex:1">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              Clear Picks
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Settings Accordion -->
-      <details class="card accordion" id="settingsSection" open>
-        <summary>
-          <div>
-            <div class="card-title">Page Settings</div>
-            <div class="card-subtitle">Style, template &amp; layout</div>
-          </div>
-          <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
-        <div class="accordion-body">
-          <div class="form-grid">
-            <div class="field form-full">
-              <label for="pageTitle">Page Title</label>
-              <input id="pageTitle" value="Fatima's Sunflower Album">
-            </div>
-            <div class="field">
-              <label for="pageStyle">Page Style</label>
-              <select id="pageStyle">
-                <option value="sun">Sunflower Cream</option>
-                <option value="pink">Pink Maarte</option>
-                <option value="clean">Clean White</option>
-                <option value="gold">Golden Glow</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="templateStyle">Template</label>
-              <select id="templateStyle">
-                <option value="classic">Classic Grid</option>
-                <option value="magazine">Magazine Feature</option>
-                <option value="scrapbook">Tilted Scrapbook</option>
-                <option value="filmstrip">Filmstrip Cute</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="frameStyle">Frame</label>
-              <select id="frameStyle">
-                <option value="white">White Polaroid</option>
-                <option value="pink">Pink Frame</option>
-                <option value="yellow">Yellow Frame</option>
-                <option value="dotted">Dotted Maarte</option>
-                <option value="lace">Soft Lace</option>
-                <option value="shadow">Soft Shadow</option>
-                <option value="none">No Frame</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="stickerStyle">Sticker Theme</label>
-              <select id="stickerStyle">
-                <option value="sunflower">Sunflowers</option>
-                <option value="hearts">Hearts</option>
-                <option value="sparkle">Sparkles</option>
-                <option value="none">None</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="layoutCount">Photos/Page</label>
-              <select id="layoutCount">
-                <option value="4">4 Photos</option>
-              </select>
-            </div>
-            <div class="field form-full">
-              <label for="pageNote">Page Note</label>
-              <input id="pageNote" value="Bright, pretty, and unforgettable.">
-            </div>
-          </div>
-        </div>
-      </details>
-
-      <!-- Page Preview -->
+      <!-- 2. Page Preview — visible immediately so user sees live result -->
       <div class="card" id="previewSection">
         <div class="card-header">
           <div>
-            <div class="card-title">Page Preview</div>
-            <div class="card-subtitle">Tap photos in the strip to pick them</div>
+            <div class="card-title">Live Preview</div>
+            <div class="card-subtitle">Tap photos above to add them here</div>
           </div>
         </div>
         <div class="preview-wrap">
@@ -1702,25 +1688,93 @@
         </div>
       </div>
 
-      <!-- Caption Designer -->
+      <!-- 3. Page Settings accordion (closed by default — opens when needed) -->
+      <details class="card accordion" id="settingsSection">
+        <summary>
+          <div>
+            <div class="card-title">⚙️ Page Settings</div>
+            <div class="card-subtitle">Style, template, frame &amp; stickers</div>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <div class="accordion-body">
+          <div class="form-grid">
+            <div class="field form-full">
+              <label for="pageTitle">Page Title</label>
+              <input id="pageTitle" value="Fatima's Sunflower Album" placeholder="Give this page a title">
+            </div>
+
+            <div class="field-group-divider"></div>
+
+            <div class="field">
+              <label for="pageStyle">🎨 Background</label>
+              <select id="pageStyle">
+                <option value="sun">🌻 Sunflower Cream</option>
+                <option value="pink">🌸 Pink Maarte</option>
+                <option value="clean">🤍 Clean White</option>
+                <option value="gold">✨ Golden Glow</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="templateStyle">📐 Template</label>
+              <select id="templateStyle">
+                <option value="classic">Classic Grid</option>
+                <option value="magazine">Magazine</option>
+                <option value="scrapbook">Scrapbook</option>
+                <option value="filmstrip">Filmstrip</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="frameStyle">🖼 Frame</label>
+              <select id="frameStyle">
+                <option value="white">White Polaroid</option>
+                <option value="pink">Pink Frame</option>
+                <option value="yellow">Yellow Frame</option>
+                <option value="dotted">Dotted Maarte</option>
+                <option value="lace">Soft Lace</option>
+                <option value="shadow">Soft Shadow</option>
+                <option value="none">No Frame</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="stickerStyle">🌟 Stickers</label>
+              <select id="stickerStyle">
+                <option value="sunflower">🌻 Sunflowers</option>
+                <option value="hearts">💗 Hearts</option>
+                <option value="sparkle">✨ Sparkles</option>
+                <option value="none">None</option>
+              </select>
+            </div>
+
+            <div class="field-group-divider"></div>
+
+            <div class="field form-full">
+              <label for="pageNote">Page Note</label>
+              <input id="pageNote" value="Bright, pretty, and unforgettable." placeholder="A short caption for this page">
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <!-- 4. Photo Captions accordion (closed by default) -->
       <details class="card accordion" id="captionSection">
         <summary>
           <div>
-            <div class="card-title">Photo Captions</div>
+            <div class="card-title">✏️ Photo Captions</div>
             <div class="card-subtitle">Add words &amp; stickers to each photo</div>
           </div>
           <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </summary>
         <div class="accordion-body" id="captionDesigner">
-          <div class="empty-state">Select photos to write captions for each one.</div>
+          <div class="empty-state">Select photos in the library to add captions.</div>
         </div>
       </details>
 
-      <!-- Studio Actions -->
+      <!-- 5. Save & Export actions -->
       <div class="studio-actions">
         <button class="btn btn-primary" id="savePageBtn" type="button">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-          Save Page
+          Save to Album
         </button>
         <button class="btn btn-secondary" id="exportPageBtn" type="button">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
@@ -2174,10 +2228,13 @@
     });
   }
 
-  /* ─── Photo strip ─── */
+  /* ─── Photo library grid ─── */
   function renderPhotos() {
+    const countEl = document.querySelector('#photoLibCount');
+    if (countEl) countEl.textContent = `${state.photos.length} photo${state.photos.length !== 1 ? 's' : ''}`;
+
     if (!state.photos.length) {
-      els.photoGrid.innerHTML = '<div class="photo-strip-empty">No photos yet. Tap + to add!</div>';
+      els.photoGrid.innerHTML = '<div class="photo-grid-empty">No photos yet — tap above to add!</div>';
       return;
     }
     els.photoGrid.innerHTML = '';
@@ -2186,7 +2243,7 @@
       const order = state.selected.indexOf(photo.id);
       btn.className = `photo-tile ${order >= 0 ? 'selected' : ''}`;
       btn.type = 'button';
-      btn.innerHTML = `<img src="${photo.data}" alt=""><span class="badge">${order >= 0 ? order + 1 : '+'}</span>`;
+      btn.innerHTML = `<img src="${photo.data}" alt="" loading="lazy"><span class="badge">${order >= 0 ? order + 1 : '+'}</span>`;
       btn.addEventListener('click', () => togglePhoto(photo.id));
       els.photoGrid.append(btn);
     });
