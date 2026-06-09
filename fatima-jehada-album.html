@@ -1594,6 +1594,12 @@
       box-shadow: 0 2px 8px rgba(106,64,31,.06);
     }
 
+    .saved-card.editing {
+      border-color: rgba(244,124,168,.65);
+      background: linear-gradient(135deg, rgba(255,225,236,.9), rgba(255,245,213,.92));
+      box-shadow: 0 8px 20px rgba(244,124,168,.16);
+    }
+
     .saved-card-info {
       flex: 1;
       min-width: 0;
@@ -2348,7 +2354,7 @@
       <div class="studio-actions">
         <button class="btn btn-primary" id="savePageBtn" type="button">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-          Save to Album
+          <span id="savePageLabel">Save to Album</span>
         </button>
         <button class="btn btn-secondary" id="exportPageBtn" type="button">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
@@ -2538,6 +2544,7 @@
     captions: JSON.parse(localStorage.getItem('fatimaAlbumCaptions') || '{}'),
     crops: JSON.parse(localStorage.getItem('fatimaAlbumCrops') || '{}'),
     selected: [],
+    editingPageId: null,
     bookOpen: false,
     pageIndex: 0
   };
@@ -2556,6 +2563,7 @@
     pageNote: document.querySelector('#pageNote'),
     captionDesigner: document.querySelector('#captionDesigner'),
     savePage: document.querySelector('#savePageBtn'),
+    savePageLabel: document.querySelector('#savePageLabel'),
     exportPage: document.querySelector('#exportPageBtn'),
     clearSelection: document.querySelector('#clearSelectionBtn'),
     closeBook: document.querySelector('#closeBookBtn'),
@@ -2974,13 +2982,14 @@
     state.pages.forEach(page => {
       const card = document.createElement('div');
       card.className = 'saved-card';
+      if (state.editingPageId === page.id) card.classList.add('editing');
       card.innerHTML = `
         <div class="saved-card-info">
           <div class="saved-card-title">${escapeHtml(page.title)}</div>
-          <div class="saved-card-meta">${page.layout} photos &bull; ${new Date(page.createdAt).toLocaleDateString()}</div>
+          <div class="saved-card-meta">${page.layout} photos &bull; ${new Date(page.updatedAt || page.createdAt).toLocaleDateString()}${state.editingPageId === page.id ? ' &bull; Editing now' : ''}</div>
         </div>
         <div class="saved-card-actions">
-          <button class="btn btn-mini load" type="button" data-action="load">Load</button>
+          <button class="btn btn-mini load" type="button" data-action="load">Edit</button>
           <button class="btn btn-mini del" type="button" data-action="delete">Del</button>
         </div>`;
       card.querySelector('[data-action="load"]').addEventListener('click', () => loadPage(page.id));
@@ -2993,6 +3002,9 @@
   function render() {
     /* Trim to slot limit; keep nulls for per-slot addressing but cap length */
     state.selected = state.selected.slice(0, selectedLimit());
+    if (els.savePageLabel) {
+      els.savePageLabel.textContent = state.editingPageId ? 'Update Page' : 'Save to Album';
+    }
     renderPreview();
     renderPhotos();
     renderCaptionDesigner();
@@ -3003,7 +3015,20 @@
   /* ─── Page CRUD ─── */
   function savePage() {
     const settings = pageSettings();
-    state.pages.unshift({ id: crypto.randomUUID(), createdAt: Date.now(), ...settings });
+    if (state.editingPageId) {
+      const index = state.pages.findIndex(page => page.id === state.editingPageId);
+      if (index >= 0) {
+        state.pages[index] = { ...state.pages[index], ...settings, updatedAt: Date.now() };
+        state.pageIndex = index;
+        persist();
+        render();
+        showToast('Album page updated.');
+        document.querySelector('#tabAlbum').click();
+        return;
+      }
+      state.editingPageId = null;
+    }
+    state.pages.unshift({ id: crypto.randomUUID(), createdAt: Date.now(), updatedAt: Date.now(), ...settings });
     state.pageIndex = 0;
     persist();
     render();
@@ -3015,6 +3040,7 @@
   function loadPage(id) {
     const page = state.pages.find(p => p.id === id);
     if (!page) return;
+    state.editingPageId = id;
     els.pageTitle.value = page.title;
     els.pageNote.value = page.note || '';
     els.layoutCount.value = page.layout;
@@ -3026,11 +3052,13 @@
     Object.assign(state.crops, page.crops || {});
     state.selected = [...page.selected];
     render();
+    showToast('Editing saved album page. Tap Update Page when done.');
     document.querySelector('#tabStudio').click();
   }
 
   function deletePage(id) {
     state.pages = state.pages.filter(p => p.id !== id);
+    if (state.editingPageId === id) state.editingPageId = null;
     state.pageIndex = Math.max(0, Math.min(state.pageIndex, bookPages().length - 1));
     persist();
     render();
