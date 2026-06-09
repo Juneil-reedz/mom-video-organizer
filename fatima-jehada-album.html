@@ -2950,20 +2950,47 @@
         /* Drag to pan · tap to edit */
         const _id = photo.id, _idx = i;
         slot.style.touchAction = 'none'; /* live-preview photo panning needs full pointer control */
-        let panStart = null, cropBase = null, didPan = false;
+        let panStart = null, cropBase = null, didPan = false, didPinch = false, suppressTapAfterPinch = false;
+        const activePointers = new Map();
+        let pinchStart = null;
+        const pointerDistance = () => {
+          const pts = [...activePointers.values()];
+          if (pts.length < 2) return 0;
+          return Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        };
 
         slot.addEventListener('pointerdown', e => {
           if (e.target.closest('.photo-caption, .photo-sticker')) return;
           e.preventDefault();
           slot.setPointerCapture?.(e.pointerId);
-          panStart = { x: e.clientX, y: e.clientY };
+          activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
           cropBase = { ...(state.crops[_id] || { x: 50, y: 50, zoom: 1 }) };
-          didPan = false;
+          if (activePointers.size >= 2) {
+            pinchStart = { distance: pointerDistance() || 1, zoom: Number(cropBase.zoom || 1) };
+            panStart = null;
+            didPan = true;
+            didPinch = true;
+            suppressTapAfterPinch = true;
+          } else {
+            panStart = { x: e.clientX, y: e.clientY };
+            didPan = false;
+            didPinch = false;
+          }
         });
 
         slot.addEventListener('pointermove', e => {
-          if (!panStart) return;
+          if (!activePointers.has(e.pointerId)) return;
           e.preventDefault();
+          activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          if (activePointers.size >= 2 && pinchStart) {
+            didPan = true;
+            didPinch = true;
+            const zoom = Math.max(.55, Math.min(3, pinchStart.zoom * (pointerDistance() / pinchStart.distance)));
+            img.style.setProperty('--img-zoom', zoom);
+            state.crops[_id] = { ...(state.crops[_id] || cropBase), zoom };
+            return;
+          }
+          if (!panStart) return;
           const dx = e.clientX - panStart.x;
           const dy = e.clientY - panStart.y;
           if (!didPan && Math.abs(dx) + Math.abs(dy) < 5) return;
@@ -2980,13 +3007,31 @@
           state.crops[_id] = { ...(state.crops[_id] || cropBase), x: nx, y: ny, zoom };
         });
 
-        slot.addEventListener('pointerup', () => {
-          if (didPan) persist();
-          else if (panStart) openPhotoEditSheet(_id, _idx); /* it was a tap */
-          panStart = null; didPan = false;
-        });
+        const finishPointer = e => {
+          activePointers.delete(e.pointerId);
+          if (didPan || didPinch) persist();
+          else if (panStart && !suppressTapAfterPinch) openPhotoEditSheet(_id, _idx); /* it was a tap */
+          if (activePointers.size === 1) {
+            const pt = [...activePointers.values()][0];
+            panStart = { x: pt.x, y: pt.y };
+            cropBase = { ...(state.crops[_id] || { x: 50, y: 50, zoom: 1 }) };
+          } else {
+            panStart = null;
+            pinchStart = null;
+            suppressTapAfterPinch = false;
+          }
+          didPan = false;
+          didPinch = false;
+        };
 
-        slot.addEventListener('pointercancel', () => { panStart = null; didPan = false; });
+        slot.addEventListener('pointerup', finishPointer);
+        slot.addEventListener('pointercancel', e => {
+          activePointers.delete(e.pointerId);
+          panStart = null;
+          pinchStart = null;
+          didPan = false;
+          didPinch = false;
+        });
       } else {
         /* Empty slot — tap to pick a photo from phone */
         slot.classList.add('empty-slot');
