@@ -961,35 +961,6 @@
       text-transform: uppercase;
     }
 
-    .drawer-stats {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-    }
-
-    .drawer-stat {
-      min-height: 70px;
-      border-radius: 8px;
-      padding: 11px;
-      background: rgba(255, 255, 255, .74);
-      border: 1px solid rgba(215, 166, 58, .28);
-      display: grid;
-      align-content: center;
-      gap: 4px;
-    }
-
-    .drawer-stat strong {
-      color: var(--green-strong);
-      font-size: 1.28rem;
-      line-height: 1;
-    }
-
-    .drawer-stat span {
-      color: var(--muted);
-      font-size: .78rem;
-      font-weight: 700;
-    }
-
     .drawer-button {
       min-height: 44px;
       display: flex;
@@ -1192,15 +1163,6 @@
         </div>
         <div>
           <section class="drawer-section">
-            <div class="drawer-label">Library</div>
-            <div class="drawer-stats">
-              <div class="drawer-stat"><strong id="drawerTotalCount">0</strong><span>Videos</span></div>
-              <div class="drawer-stat"><strong id="drawerPostedCount">0</strong><span>Posted</span></div>
-              <div class="drawer-stat"><strong id="drawerReadyCount">0</strong><span>Ready</span></div>
-              <div class="drawer-stat"><strong id="drawerEventCount">0</strong><span>Events</span></div>
-            </div>
-          </section>
-          <section class="drawer-section">
             <div class="drawer-label">Quick Actions</div>
             <label class="drawer-button primary" for="videoInput">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
@@ -1213,21 +1175,6 @@
             <button class="drawer-button" type="button" data-drawer-action="posted">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 12l2 2 4-4"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
               Posted Videos
-            </button>
-            <button class="drawer-button" type="button" data-drawer-action="export">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-              Export List
-            </button>
-          </section>
-          <section class="drawer-section">
-            <div class="drawer-label">View</div>
-            <button class="drawer-button" type="button" data-drawer-action="grid">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M14 14h7v7h-7z"/><path d="M3 14h7v7H3z"/></svg>
-              Grid View
-            </button>
-            <button class="drawer-button" type="button" data-drawer-action="list">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
-              List View
             </button>
             <button class="drawer-button" type="button" data-drawer-action="goodbye">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
@@ -1438,10 +1385,6 @@
       closeDrawer: document.querySelector('#closeDrawerBtn'),
       drawerOverlay: document.querySelector('#drawerOverlay'),
       drawer: document.querySelector('#drawer'),
-      drawerTotal: document.querySelector('#drawerTotalCount'),
-      drawerPosted: document.querySelector('#drawerPostedCount'),
-      drawerReady: document.querySelector('#drawerReadyCount'),
-      drawerEvents: document.querySelector('#drawerEventCount'),
       welcome: document.querySelector('#welcomeScreen'),
       skipWelcome: document.querySelector('#skipWelcomeBtn'),
       goodbye: document.querySelector('#goodbyeScreen'),
@@ -1621,10 +1564,6 @@
       els.posted.textContent = videos.filter(v => v.posted).length;
       els.draft.textContent = videos.filter(v => !v.posted).length;
       els.events.textContent = events.size;
-      els.drawerTotal.textContent = videos.length;
-      els.drawerPosted.textContent = videos.filter(v => v.posted).length;
-      els.drawerReady.textContent = videos.filter(v => !v.posted).length;
-      els.drawerEvents.textContent = events.size;
       const current = els.eventFilter.value;
       els.eventFilter.innerHTML = '<option value="">All events</option>';
       [...events].sort().forEach(event => {
