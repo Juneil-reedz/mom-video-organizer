@@ -1349,6 +1349,7 @@
     }
 
     function playVideo(video) {
+      if (!video.blob) { alert('Video file not found. Try re-adding it.'); return; }
       const url = URL.createObjectURL(video.blob);
       const dlg = document.createElement('dialog');
       dlg.innerHTML = `
@@ -1358,12 +1359,17 @@
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
           </button>
         </div>
-        <video src="${url}" controls autoplay style="display:block;width:100%;max-height:72vh;background:#000"></video>
+        <video controls playsinline webkit-playsinline preload="auto"
+          style="display:block;width:100%;max-height:72vh;background:#000"></video>
         <div class="modal-body"><textarea readonly>${escapeHtml(video.caption || '')}</textarea></div>`;
       document.body.append(dlg);
+      const vid = dlg.querySelector('video');
+      vid.src = url;
+      vid.onerror = () => { alert('Could not play this video. The format may not be supported by your browser.'); dlg.close(); };
       dlg.querySelector('button').addEventListener('click', () => dlg.close());
-      dlg.addEventListener('close', () => { URL.revokeObjectURL(url); dlg.remove(); });
+      dlg.addEventListener('close', () => { vid.pause(); vid.src = ''; URL.revokeObjectURL(url); dlg.remove(); });
       dlg.showModal();
+      vid.play().catch(() => {});
     }
 
     function openEditor(video) {
