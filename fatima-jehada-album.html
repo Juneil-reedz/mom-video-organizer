@@ -328,6 +328,7 @@
       transition: transform .4s ease, box-shadow .4s ease;
       position: relative;
       overflow: hidden;
+      touch-action: pan-y;
     }
 
     .book-cover::after {
@@ -402,10 +403,11 @@
       border: 0;
       cursor: pointer;
       transform-origin: left center;
+      touch-action: pan-y;
     }
 
     .book-page::after {
-      content: "Tap page to flip";
+      content: "Swipe sideways to flip";
       position: absolute;
       right: 14px;
       bottom: 10px;
@@ -483,6 +485,13 @@
       justify-content: center;
       gap: 10px;
       flex-wrap: wrap;
+    }
+
+    .swipe-hint {
+      color: var(--muted);
+      font-weight: 900;
+      text-align: center;
+      margin: 0;
     }
 
     @keyframes book-open {
@@ -922,7 +931,7 @@
                 <div class="cover-content">
                   <img src="fatima-jehada-logo.png" alt="Fatima Jehada album logo">
                   <h2>Fatima Jehada</h2>
-                  <p>Tap to open the album</p>
+                  <p>Swipe sideways to open</p>
                 </div>
               </button>
               <div class="book-spread">
@@ -931,7 +940,7 @@
             </div>
           </div>
           <div class="book-controls">
-            <button class="button" id="openBookBtn" type="button">Open Book</button>
+            <p class="swipe-hint">Slide your finger sideways on the cover or page.</p>
           </div>
         </section>
 
@@ -998,7 +1007,6 @@
       clearSelection: document.querySelector('#clearSelectionBtn'),
       book: document.querySelector('#book'),
       bookCover: document.querySelector('#bookCover'),
-      openBook: document.querySelector('#openBookBtn'),
       closeBook: document.querySelector('#closeBookBtn'),
       bookPage: document.querySelector('#bookPage'),
       previewTitle: document.querySelector('#previewTitle'),
@@ -1386,6 +1394,22 @@
       renderBook();
     }
 
+    function bindSwipe(element, onLeft, onRight = onLeft) {
+      let startX = 0;
+      let startY = 0;
+      element.addEventListener('pointerdown', event => {
+        startX = event.clientX;
+        startY = event.clientY;
+      });
+      element.addEventListener('pointerup', event => {
+        const dx = event.clientX - startX;
+        const dy = event.clientY - startY;
+        if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+        if (dx < 0) onLeft();
+        else onRight();
+      });
+    }
+
     function renderBook() {
       els.book.classList.toggle('open', state.bookOpen);
       const pages = bookPages();
@@ -1595,10 +1619,9 @@
     els.savePage.addEventListener('click', savePage);
     els.exportPage.addEventListener('click', exportPageImage);
     els.clearSelection.addEventListener('click', () => { state.selected = []; render(); });
-    els.bookCover.addEventListener('click', openBook);
-    els.openBook.addEventListener('click', openBook);
+    bindSwipe(els.bookCover, openBook, openBook);
     els.closeBook.addEventListener('click', closeBook);
-    els.bookPage.addEventListener('click', flipBookPage);
+    bindSwipe(els.bookPage, flipBookPage, flipBookPage);
     [els.pageTitle, els.layoutCount, els.pageStyle, els.templateStyle, els.frameStyle, els.stickerStyle, els.pageNote].forEach(input => {
       input.addEventListener('input', renderPreview);
       input.addEventListener('change', render);
