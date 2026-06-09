@@ -1244,8 +1244,8 @@
 
     .bookview {
       position: relative;
-      width: min(340px, 88vw); /* wider so book fills the card properly on phone */
-      aspect-ratio: .72/1;
+      width: min(340px, 88vw);
+      aspect-ratio: 1.1 / 1; /* matches live preview so saved pages look identical */
       transform-style: preserve-3d;
     }
 
@@ -1404,53 +1404,63 @@
       background: radial-gradient(circle at bottom left, rgba(244,124,168,.32) 0%, transparent 65%);
     }
 
-    /* ── Inner page content layout ── */
-    .page-inner {
+    /* ── Book page content — reuses .slot / .photo-layout CSS ── */
+    .bpage-album {
       position: absolute;
       inset: 0;
-      padding: 14px 12px 12px;
+      padding: 9px 11px 9px;
       display: grid;
-      grid-template-rows: auto 1fr auto;
-      gap: 7px;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 5px;
+      overflow: hidden;
+      border-radius: 3px 16px 16px 3px;
       background:
-        radial-gradient(circle at 14% 12%, rgba(248,194,27,.16), transparent 30%),
-        var(--paper);
+        radial-gradient(circle at 12% 14%, rgba(248,194,27,.22), transparent 28%),
+        radial-gradient(circle at 90% 18%, rgba(244,124,168,.15), transparent 30%),
+        var(--page-bg, #fffaf0);
     }
 
-    .page-inner h3 {
+    .bpage-album .page-title {
       font-family: var(--display);
+      font-size: clamp(.65rem, 2.5vw, .95rem);
+      line-height: 1.1;
       text-align: center;
       color: var(--brown);
-      font-size: clamp(.82rem, 2.8vw, 1.1rem);
-      line-height: 1.1;
     }
 
-    .page-inner .book-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 5px;
-      min-height: 0;
-    }
-
-    .page-inner .book-photo {
-      position: relative;
-      border: 4px solid white;
-      border-radius: 10px;
-      overflow: hidden;
-      background: var(--cream);
-      box-shadow: 0 4px 10px rgba(106,64,31,.08);
-      aspect-ratio: 1;
-    }
-
-    .page-inner .book-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-    .page-inner .book-note {
+    .bpage-album .page-subtitle {
       text-align: center;
       color: var(--muted);
       font-weight: 700;
-      font-size: .68rem;
+      font-size: clamp(.45rem, 1.4vw, .6rem);
+      margin-top: -3px;
     }
 
+    .bpage-album .photo-layout { min-height: 0; gap: 5px; }
+    .bpage-album .slot { box-shadow: 0 2px 8px rgba(106,64,31,.09); }
+
+    .bpage-album .page-note {
+      text-align: center;
+      color: var(--brown);
+      font-weight: 800;
+      font-size: clamp(.45rem, 1.4vw, .6rem);
+    }
+
+    .bpage-album .photo-caption {
+      font-size: clamp(.42rem, 1.1vw, .6rem);
+      padding: 2px 4px;
+      cursor: default;
+    }
+
+    .bpage-album .photo-sticker {
+      font-size: clamp(.7rem, 1.8vw, 1.1rem);
+      cursor: default;
+    }
+
+    .bpage-album .page-sticker.a { left: 6px; bottom: 6px; font-size: clamp(.65rem, 1.6vw, 1rem); }
+    .bpage-album .page-sticker.b { right: 6px; top: 6px; font-size: clamp(.65rem, 1.6vw, 1rem); }
+
+    /* legacy — kept for safety but no longer generated */
     .page-inner .book-caption {
       position: absolute;
       left: var(--caption-x, 50%);
@@ -2570,13 +2580,13 @@
 
   function cropSettings() {
     const out = {};
-    state.selected.forEach(id => { out[id] = state.crops[id] || { x: 50, y: 50, zoom: 1 }; });
+    state.selected.forEach(id => { if (id) out[id] = state.crops[id] || { x: 50, y: 50, zoom: 1 }; });
     return out;
   }
 
   function captionSettings() {
     const out = {};
-    state.selected.forEach(id => { out[id] = state.captions[id] || defaultCaption(); });
+    state.selected.forEach(id => { if (id) out[id] = state.captions[id] || defaultCaption(); });
     return out;
   }
 
@@ -2926,28 +2936,59 @@
   function fillPage(target, page) {
     if (!target) return;
     if (!page) {
-      target.innerHTML = `<div class="page-inner"><h3>Album Page</h3><div class="empty-state" style="padding:16px;font-size:.8rem;">Save a page to see it here.</div><p class="book-note">Fatima Jehada Asaad-Noor</p></div>`;
+      target.innerHTML = `<div class="bpage-album" style="--page-bg:#fffaf0">
+        <h2 class="page-title">Album Page</h2>
+        <p class="page-subtitle">Fatima Jehada Asaad-Noor</p>
+        <div class="photo-layout layout-4 template-classic"></div>
+        <p class="page-note">Fatima Jehada Asaad-Noor</p>
+      </div>`;
       return;
     }
-    const selected = (page.selected || []).map(id => state.photos.find(p => p.id === id)).filter(Boolean).slice(0, 4);
+
+    const bg = { sun: '#fffaf0', pink: '#ffe1ec', clean: '#ffffff', gold: '#fff5d5' }[page.style] || '#fffaf0';
+    const frame = {
+      white:  ['#ffffff', '5px', 'solid'],
+      pink:   ['#ffd0df', '5px', 'solid'],
+      yellow: ['#ffd95d', '5px', 'solid'],
+      dotted: ['#f47ca8', '5px', 'dotted'],
+      lace:   ['#fff5d5', '6px', 'double'],
+      shadow: ['#ffffff', '3px', 'solid'],
+      none:   ['transparent', '0px', 'solid']
+    }[page.frame] || ['#ffffff', '5px', 'solid'];
+    const [fc, fw, fs] = frame;
+    const stickers = { sunflower: ['🌻','🌸'], hearts: ['💛','💗'], sparkle: ['✨','✦'], none: ['',''] }[page.sticker] || ['',''];
+
+    const selected = page.selected || [];
+    const count = Number(page.layout || 4);
     const captions = page.captions || {};
     const savedCrops = page.crops || {};
-    const photos = selected.map(photo => {
-      const cap = captions[photo.id] || defaultCaption();
-      const cr = savedCrops[photo.id] || state.crops[photo.id] || { x: 50, y: 50, zoom: 1 };
-      return `<div class="book-photo">
-        <img src="${photo.data}" alt="" loading="lazy" style="object-position:${cr.x}% ${cr.y}%;transform:scale(${cr.zoom});transform-origin:${cr.x}% ${cr.y}%">
-        ${cap.text ? `<div class="book-caption" style="--caption-color:${cap.color};--caption-font:${fontFamily(cap.font)};--caption-x:${cap.x??50}%;--caption-y:${cap.y??86}%">${escapeHtml(cap.text)}</div>` : ''}
-        ${cap.sticker ? `<div class="book-sticker" style="--sticker-x:${cap.stickerX??84}%;--sticker-y:${cap.stickerY??18}%">${escapeHtml(cap.sticker)}</div>` : ''}
-      </div>`;
-    }).join('');
-    const blanks = Array.from({length: Math.max(0, 4 - selected.length)}, (_, i) =>
-      `<div class="book-photo"><div class="empty-state" style="padding:6px;font-size:.66rem;color:var(--muted)">Photo ${selected.length+i+1}</div></div>`
-    ).join('');
-    target.innerHTML = `<div class="page-inner">
-      <h3>${escapeHtml(page.title || 'Album Page')}</h3>
-      <div class="book-grid">${photos}${blanks}</div>
-      <p class="book-note">${escapeHtml(page.note || 'Fatima Jehada Asaad-Noor')}</p>
+
+    let slotsHTML = '';
+    for (let i = 0; i < count; i++) {
+      const id = selected[i];
+      const photo = id ? state.photos.find(p => p.id === id) : null;
+      if (photo) {
+        const cap = captions[photo.id] || defaultCaption();
+        const cr = savedCrops[photo.id] || state.crops[photo.id] || { x: 50, y: 50, zoom: 1 };
+        const capEl = cap.text
+          ? `<div class="photo-caption" style="--caption-color:${cap.color};--caption-font:${fontFamily(cap.font)};--caption-x:${cap.x??50}%;--caption-y:${cap.y??86}%">${escapeHtml(cap.text)}</div>`
+          : '';
+        const stickerEl = cap.sticker
+          ? `<div class="photo-sticker" style="--sticker-x:${cap.stickerX??84}%;--sticker-y:${cap.stickerY??18}%">${escapeHtml(cap.sticker)}</div>`
+          : '';
+        slotsHTML += `<div class="slot"><img src="${photo.data}" alt="" loading="lazy" style="--img-x:${cr.x}%;--img-y:${cr.y}%;--img-zoom:${cr.zoom}">${capEl}${stickerEl}</div>`;
+      } else {
+        slotsHTML += `<div class="slot empty-slot" style="opacity:.45"></div>`;
+      }
+    }
+
+    target.innerHTML = `<div class="bpage-album" style="--page-bg:${bg};--frame-color:${fc};--frame-width:${fw};--frame-style:${fs}">
+      <h2 class="page-title">${escapeHtml(page.title || 'Album Page')}</h2>
+      <p class="page-subtitle">Fatima Jehada Asaad-Noor</p>
+      <div class="photo-layout layout-${count} template-${page.template || 'classic'}">${slotsHTML}</div>
+      <p class="page-note">${escapeHtml(page.note || 'Fatima Jehada Asaad-Noor')}</p>
+      ${stickers[0] ? `<span class="page-sticker a">${stickers[0]}</span>` : ''}
+      ${stickers[1] ? `<span class="page-sticker b">${stickers[1]}</span>` : ''}
     </div>`;
   }
 
