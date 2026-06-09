@@ -1454,6 +1454,7 @@
       width: min(340px, 88vw);
       aspect-ratio: 1.1 / 1; /* matches live preview so saved pages look identical */
       contain: layout paint;
+      transform-style: preserve-3d;
       transform: translateZ(0);
       -webkit-transform: translateZ(0);
     }
@@ -1501,36 +1502,42 @@
     .bpage-flip {
       position: absolute;
       inset: 0;
-      transform-origin: center center;
+      transform-origin: left center;
+      transform-style: preserve-3d;
       z-index: 6;
       pointer-events: none;
-      will-change: transform, opacity, clip-path;
+      will-change: transform, opacity, filter;
       opacity: 0;
       visibility: hidden;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
 
     .bpage-flip.flipping-next {
       opacity: 1;
       visibility: visible;
-      animation: flipToNext .58s cubic-bezier(.22,.61,.36,1) forwards;
+      animation: flipToNext3d .72s cubic-bezier(.645,.045,.355,1) forwards;
     }
 
     .bpage-flip.flipping-prev {
       opacity: 1;
       visibility: visible;
-      animation: flipToPrev .58s cubic-bezier(.22,.61,.36,1) forwards;
+      transform-origin: right center;
+      animation: flipToPrev3d .72s cubic-bezier(.645,.045,.355,1) forwards;
     }
 
-    @keyframes flipToNext {
-      0%   { transform: translateX(0) rotateZ(0deg) scale(1); opacity: 1; clip-path: inset(0 0 0 0 round 22px 30px 30px 22px); }
-      48%  { transform: translateX(-38%) rotateZ(-4deg) scale(.985); opacity: .96; clip-path: inset(0 24% 0 0 round 22px 30px 30px 22px); }
-      100% { transform: translateX(-105%) rotateZ(-7deg) scale(.96); opacity: 0; clip-path: inset(0 100% 0 0 round 22px 30px 30px 22px); }
+    @keyframes flipToNext3d {
+      0%   { transform: perspective(1300px) rotateY(0deg) translateZ(1px); opacity: 1; filter: brightness(1); }
+      46%  { transform: perspective(1300px) rotateY(-74deg) translateZ(18px); opacity: .98; filter: brightness(.96); }
+      78%  { transform: perspective(1300px) rotateY(-126deg) translateZ(10px); opacity: .72; filter: brightness(.9); }
+      100% { transform: perspective(1300px) rotateY(-158deg) translateZ(0); opacity: 0; filter: brightness(.86); }
     }
 
-    @keyframes flipToPrev {
-      0%   { transform: translateX(0) rotateZ(0deg) scale(1); opacity: 1; clip-path: inset(0 0 0 0 round 22px 30px 30px 22px); }
-      48%  { transform: translateX(38%) rotateZ(4deg) scale(.985); opacity: .96; clip-path: inset(0 0 0 24% round 22px 30px 30px 22px); }
-      100% { transform: translateX(105%) rotateZ(7deg) scale(.96); opacity: 0; clip-path: inset(0 0 0 100% round 22px 30px 30px 22px); }
+    @keyframes flipToPrev3d {
+      0%   { transform: perspective(1300px) rotateY(0deg) translateZ(1px); opacity: 1; filter: brightness(1); }
+      46%  { transform: perspective(1300px) rotateY(74deg) translateZ(18px); opacity: .98; filter: brightness(.96); }
+      78%  { transform: perspective(1300px) rotateY(126deg) translateZ(10px); opacity: .72; filter: brightness(.9); }
+      100% { transform: perspective(1300px) rotateY(158deg) translateZ(0); opacity: 0; filter: brightness(.86); }
     }
 
     .bpage-flip-face {
@@ -1538,7 +1545,10 @@
       inset: 0;
       border-radius: 22px 30px 30px 22px;
       overflow: hidden;
-      transform: translateZ(0);
+      transform: translateZ(.5px);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      box-shadow: 0 18px 32px rgba(106,64,31,.18);
     }
 
     .bpage-flip-back {
@@ -1553,8 +1563,8 @@
       pointer-events: none;
       z-index: 2;
       background:
-        linear-gradient(to left, rgba(106,64,31,.0) 0%, rgba(106,64,31,.20) 86%, rgba(106,64,31,.38) 100%),
-        linear-gradient(to right, rgba(255,255,255,.28), transparent 42%);
+        linear-gradient(to left, rgba(106,64,31,.0) 0%, rgba(106,64,31,.20) 86%, rgba(106,64,31,.44) 100%),
+        linear-gradient(to right, rgba(255,255,255,.34), transparent 42%);
     }
 
     .bpage-flip-light-back {
@@ -1573,7 +1583,7 @@
 
     .flipping-next .bpage-flip-shadow,
     .flipping-prev .bpage-flip-shadow {
-      animation: shadowPulse .58s ease-in-out forwards;
+      animation: shadowPulse .72s ease-in-out forwards;
     }
 
     @keyframes shadowPulse {
@@ -3333,8 +3343,8 @@
     void flipEl.offsetWidth;
     flipEl.style.animation = '';
 
-    /* Pre-populate a single moving page over the destination page.
-       Avoiding a rotating back face prevents mobile Safari flicker. */
+    /* Pre-populate one 3D moving page over the destination page.
+       Keeping only one visible face avoids the old mobile Safari flicker. */
     if (direction === 'next') {
       fillPage(flipFront, pages[oldIndex]);   /* departing page on front */
       flipBack.innerHTML = '';
