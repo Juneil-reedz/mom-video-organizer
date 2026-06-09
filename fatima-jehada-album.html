@@ -1343,6 +1343,7 @@
       overflow: visible;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
+      justify-items: center;
     }
 
     .album-book-shell {
@@ -1351,14 +1352,15 @@
       min-height: min(74dvh, 760px);
       display: grid;
       align-content: center;
-      padding: 10px 0 20px;
+      padding: 10px max(14px, env(safe-area-inset-left, 0px)) 20px max(14px, env(safe-area-inset-right, 0px));
     }
 
     .album-shelf {
       width: min(100%, 980px);
       margin-inline: auto;
       display: grid;
-      gap: 10px;
+      gap: 14px;
+      padding-inline: max(8px, env(safe-area-inset-left, 0px)) max(8px, env(safe-area-inset-right, 0px));
     }
 
     .album-shelf-form {
@@ -1387,12 +1389,12 @@
 
     .album-shelf-track {
       display: flex;
-      gap: 12px;
+      gap: 22px;
       overflow-x: auto;
       overscroll-behavior-x: contain;
       -webkit-overflow-scrolling: touch;
       scroll-snap-type: x proximity;
-      padding: 4px 4px 12px;
+      padding: 8px 18px 16px 6px;
       touch-action: pan-x pan-y;
     }
 
@@ -1471,7 +1473,8 @@
     }
 
     .bookview-scene {
-      padding: clamp(22px, 5vw, 46px) 20px clamp(28px, 5vw, 54px); /* extra room for drop-shadow & page-stack bleed */
+      width: 100%;
+      padding: clamp(22px, 5vw, 46px) clamp(18px, 6vw, 44px) clamp(28px, 5vw, 54px); /* extra room for drop-shadow & page-stack bleed */
       display: grid;
       place-items: center;
       position: relative;
@@ -1600,7 +1603,8 @@
 
     .bookview {
       position: relative;
-      width: min(640px, 94vw);
+      width: min(640px, calc(100vw - 48px));
+      margin-inline: auto;
       aspect-ratio: 1.1 / 1; /* matches live preview so saved pages look identical */
       contain: layout paint;
       transform-style: preserve-3d;
@@ -2276,9 +2280,10 @@
       .caption-row .form-grid { grid-template-columns: repeat(2, 1fr); }
       .view { padding-left: 28px; padding-right: 28px; }
       .photo-grid-inner { grid-template-columns: repeat(4, 1fr); }
-      .bookview { width: min(680px, 94vw); }
+      .bookview { width: min(680px, calc(100vw - 72px)); }
       .book3d-cover-btn { width: min(330px, 62vw); }
       .album-tile { flex-basis: 144px; min-height: 164px; }
+      .album-shelf-track { gap: 26px; padding-right: 24px; }
     }
 
     /* ── 820px: Tablet landscape / small desktop ── */
@@ -2329,7 +2334,7 @@
       #bookSection { grid-column: 1; }
       #savedSection .saved-list { max-height: min(32dvh, 300px); }
 
-      .bookview { width: min(760px, 92vw); }
+      .bookview { width: min(760px, calc(100vw - 112px)); }
       .book3d-cover-btn { width: min(360px, 52vw); }
     }
 
@@ -2412,7 +2417,7 @@
         grid-template-columns: minmax(0, 1fr);
       }
 
-      .bookview { width: min(860px, 78vw); }
+      .bookview { width: min(860px, calc(100vw - var(--sidebar-width) - 148px)); }
       .book3d-cover-btn { width: min(390px, 42vw); }
 
       /* Photo grid: 5 cols on desktop */
