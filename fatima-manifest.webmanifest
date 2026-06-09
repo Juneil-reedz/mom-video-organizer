@@ -1,0 +1,22 @@
+{
+  "name": "Fatima Jehada Album Studio",
+  "short_name": "Fatima Album",
+  "description": "A sunflower yellow and pink photo album studio for Fatima Jehada Asaad-Noor.",
+  "start_url": "./fatima-jehada-album.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fffaf0",
+  "theme_color": "#f8c21b",
+  "icons": [
+    {
+      "src": "fatima-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "fatima-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
