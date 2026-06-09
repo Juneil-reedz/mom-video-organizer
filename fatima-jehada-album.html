@@ -125,6 +125,9 @@
       overflow-y: auto;
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+      touch-action: pan-y;
+      scroll-padding-bottom: calc(var(--tab-height) + var(--safe-bottom) + 28px);
       padding: 16px 16px calc(var(--tab-height) + var(--safe-bottom) + 16px);
       display: flex;
       flex-direction: column;
@@ -569,11 +572,14 @@
       z-index: 1;
       display: grid;
       gap: var(--page-gap, 10px);
+      width: 100%;
+      height: 100%;
       min-height: 0;
+      min-width: 0;
     }
 
     .layout-1 { grid-template-columns: 1fr; }
-    .layout-2 { grid-template-columns: repeat(2, 1fr); }
+    .layout-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr); }
     .layout-4 { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); }
     .layout-6 { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); }
 
@@ -606,6 +612,9 @@
       font-weight: 800;
       font-size: .76rem;
       min-height: 0;
+      min-width: 0;
+      width: 100%;
+      height: 100%;
     }
 
     .slot img {
@@ -1131,6 +1140,8 @@
       display: grid;
       place-items: center;
       position: relative;
+      overflow: visible;
+      touch-action: pan-y;
       /* no min-height — let the book's natural aspect-ratio size determine height */
     }
 
@@ -1247,6 +1258,9 @@
       width: min(340px, 88vw);
       aspect-ratio: 1.1 / 1; /* matches live preview so saved pages look identical */
       transform-style: preserve-3d;
+      contain: layout paint;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
     }
 
     /* Stack depth illusion */
@@ -1257,6 +1271,9 @@
       background: #fffaf0;
       border: 1px solid rgba(217,147,0,.20);
       overflow: hidden;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
 
     .bpage-stack-3 { transform: translate(6px,-6px) scale(.994); filter: brightness(.89); z-index: 0; }
@@ -1294,13 +1311,21 @@
       z-index: 6;
       pointer-events: none;
       will-change: transform;
+      opacity: 0;
+      visibility: hidden;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
 
     .bpage-flip.flipping-next {
+      opacity: 1;
+      visibility: visible;
       animation: flipToNext .9s cubic-bezier(.645,.045,.355,1) forwards;
     }
 
     .bpage-flip.flipping-prev {
+      opacity: 1;
+      visibility: visible;
       animation: flipToPrev .9s cubic-bezier(.645,.045,.355,1) forwards;
     }
 
@@ -1319,12 +1344,13 @@
       inset: 0;
       border-radius: 3px 18px 18px 3px;
       overflow: hidden;
+      transform: translateZ(.2px);
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
     }
 
     .bpage-flip-back {
-      transform: rotateY(180deg);
+      transform: rotateY(180deg) translateZ(.2px);
     }
 
     /* Lighting gradient – darkens at the fold edge */
@@ -2672,7 +2698,7 @@
         }
         /* Drag to pan · tap to edit */
         const _id = photo.id, _idx = i;
-        slot.style.touchAction = 'none'; /* capture all pointer movement */
+        slot.style.touchAction = 'pan-y'; /* let phone users scroll the Studio from the preview */
         let panStart = null, cropBase = null, didPan = false;
 
         slot.addEventListener('pointerdown', e => {
@@ -3035,19 +3061,25 @@
     const under     = document.querySelector('#bpageUnder');
     const current   = document.querySelector('#bpageCurrent');
 
-    /* Pre-populate faces */
+    flipEl.className = 'bpage-flip';
+    flipEl.style.animation = 'none';
+    void flipEl.offsetWidth;
+    flipEl.style.animation = '';
+
+    /* Pre-populate faces. Keep #bpageCurrent on the old page until animationend
+       so the page underneath does not flash early during the flip. */
     if (direction === 'next') {
       fillPage(flipFront, pages[oldIndex]);   /* departing page on front */
       fillPage(flipBack,  pages[newIndex]);   /* arriving page on back */
       fillPage(under,     pages[newIndex]);   /* revealed under the peel */
-      fillPage(current,   pages[newIndex]);   /* already updated (hidden under flip) */
+      fillPage(current,   pages[oldIndex]);
       flipEl.className = 'bpage-flip flipping-next';
     } else {
       /* Prev: flip arrives from the left (starts at -180°, goes to 0°) */
       fillPage(flipFront, pages[newIndex]);   /* arriving prev page on front */
       fillPage(flipBack,  pages[oldIndex]);   /* departing current on back (shown at start) */
       fillPage(under,     pages[newIndex]);   /* under shows destination */
-      fillPage(current,   pages[newIndex]);
+      fillPage(current,   pages[oldIndex]);
       flipEl.className = 'bpage-flip flipping-prev';
     }
 
@@ -3056,6 +3088,8 @@
 
     flipEl.addEventListener('animationend', () => {
       isFlipping = false;
+      fillPage(current, pages[state.pageIndex]);
+      under.innerHTML = '';
       flipEl.className = 'bpage-flip';
       flipFront.innerHTML = '';
       flipBack.innerHTML  = '';
@@ -3080,7 +3114,7 @@
       document.querySelector('#closeBookBtn').style.display = '';
       const pages = bookPages();
       state.pageIndex = Math.max(0, Math.min(state.pageIndex, pages.length - 1));
-      fillPage(document.querySelector('#bpageCurrent'), pages[state.pageIndex]);
+      if (!isFlipping) fillPage(document.querySelector('#bpageCurrent'), pages[state.pageIndex]);
     } else {
       document.querySelector('#bookClosed').style.display = '';
       document.querySelector('#bookOpen').classList.remove('visible');
