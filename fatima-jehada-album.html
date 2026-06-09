@@ -1163,6 +1163,150 @@
       transform: translate(-50%, 0);
     }
 
+    .front-page {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: grid;
+      place-items: center;
+      padding: max(28px, var(--safe-top)) 22px max(28px, var(--safe-bottom));
+      background:
+        radial-gradient(circle at 20% 16%, rgba(248,194,27,.34), transparent 34%),
+        radial-gradient(circle at 82% 18%, rgba(244,124,168,.28), transparent 30%),
+        linear-gradient(160deg, #fffaf0 0%, #ffe1ec 52%, #fff5d5 100%);
+      perspective: 1800px;
+      overflow: hidden;
+      transition: opacity .45s ease, visibility .45s ease;
+    }
+
+    .front-page.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .front-book-wrap {
+      position: relative;
+      width: min(330px, 78vw);
+      aspect-ratio: .74 / 1;
+      transform-style: preserve-3d;
+      filter: drop-shadow(0 32px 46px rgba(106,64,31,.26));
+    }
+
+    .front-book-wrap::before,
+    .front-book-wrap::after {
+      content: "";
+      position: absolute;
+      inset: 12px -10px -12px 18px;
+      border-radius: 24px 34px 34px 24px;
+      background: rgba(255,255,255,.58);
+      border: 1px solid rgba(217,147,0,.2);
+      transform: translateZ(-14px) rotateY(-6deg);
+    }
+
+    .front-book-wrap::after {
+      inset: 24px -18px -24px 28px;
+      opacity: .45;
+      transform: translateZ(-26px) rotateY(-9deg);
+    }
+
+    .front-cover {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 24px 38px 38px 24px;
+      border: 1px solid rgba(217,147,0,.42);
+      background:
+        linear-gradient(100deg, rgba(106,64,31,.20) 0%, transparent 16%),
+        radial-gradient(circle at 48% 22%, rgba(248,194,27,.38), transparent 30%),
+        linear-gradient(135deg, #ffe1ec 0%, #fff5d5 62%, #ffd95d 100%);
+      transform-origin: left center;
+      transform-style: preserve-3d;
+      cursor: pointer;
+      overflow: hidden;
+      box-shadow:
+        inset 12px 0 22px rgba(106,64,31,.16),
+        inset -5px 0 16px rgba(255,255,255,.42);
+      transition: transform .9s cubic-bezier(.645,.045,.355,1), filter .25s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .front-cover::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 24px;
+      background: linear-gradient(to right, rgba(106,64,31,.42), rgba(106,64,31,.08));
+    }
+
+    .front-cover::after {
+      content: "";
+      position: absolute;
+      inset: 16px;
+      border: 1px dashed rgba(217,147,0,.38);
+      border-radius: 18px 30px 30px 18px;
+      pointer-events: none;
+    }
+
+    .front-page.opening .front-cover {
+      transform: rotateY(-155deg) translateX(-4px);
+      filter: brightness(.96);
+    }
+
+    .front-cover-content {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      justify-items: center;
+      gap: 12px;
+      padding: 26px;
+      text-align: center;
+      color: var(--brown);
+      transform: translateZ(2px);
+    }
+
+    .front-cover-content img {
+      width: min(116px, 34vw);
+      aspect-ratio: 1;
+      border-radius: 24px;
+      object-fit: cover;
+      border: 2px solid rgba(217,147,0,.34);
+      background: white;
+      box-shadow: 0 12px 24px rgba(106,64,31,.14);
+    }
+
+    .front-cover-content h1 {
+      font-family: var(--display);
+      font-size: clamp(1.45rem, 8vw, 2.3rem);
+      line-height: .95;
+    }
+
+    .front-cover-content p {
+      color: var(--muted);
+      font-weight: 900;
+      font-size: .9rem;
+    }
+
+    .front-open-hint {
+      position: absolute;
+      left: 50%;
+      bottom: max(28px, calc(var(--safe-bottom) + 18px));
+      transform: translateX(-50%);
+      width: min(340px, calc(100vw - 40px));
+      min-height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(217,147,0,.28);
+      color: var(--brown);
+      font-weight: 900;
+      box-shadow: 0 10px 24px rgba(106,64,31,.12);
+    }
+
     /* ─── Album View ─── */
 
     /* ── 3D Book ── */
@@ -2135,6 +2279,19 @@
   </style>
 </head>
 <body>
+
+<section class="front-page" id="frontPage" aria-label="Welcome cover">
+  <div class="front-book-wrap">
+    <button class="front-cover" id="frontCoverBtn" type="button" aria-label="Open Fatima Jehada Album Studio">
+      <div class="front-cover-content">
+        <img src="fatima-jehada-logo.png" alt="Fatima Jehada album logo">
+        <h1>Fatima Jehada</h1>
+        <p>Sunflower Album Studio</p>
+      </div>
+    </button>
+  </div>
+  <div class="front-open-hint">Tap the cover to open</div>
+</section>
 
 <div class="app">
 
@@ -3379,6 +3536,18 @@
   els.input.addEventListener('change', e => addPhotos(e.target.files));
   els.savePage.addEventListener('click', savePage);
   els.exportPage.addEventListener('click', exportPageImage);
+
+  const frontPage = document.querySelector('#frontPage');
+  const frontCoverBtn = document.querySelector('#frontCoverBtn');
+  function openFrontPage() {
+    if (!frontPage || frontPage.classList.contains('opening')) return;
+    frontPage.classList.add('opening');
+    setTimeout(() => {
+      frontPage.classList.add('hidden');
+      showToast('Welcome to Fatima Jehada Album Studio.');
+    }, 850);
+  }
+  frontCoverBtn?.addEventListener('click', openFrontPage);
   els.clearSelection?.addEventListener('click', () => { state.selected = []; render(); });
 
   /* Add Photos button in preview card header */
