@@ -1447,7 +1447,6 @@
       position: relative;
       width: min(340px, 88vw);
       aspect-ratio: 1.1 / 1; /* matches live preview so saved pages look identical */
-      transform-style: preserve-3d;
       contain: layout paint;
       transform: translateZ(0);
       -webkit-transform: translateZ(0);
@@ -1496,37 +1495,36 @@
     .bpage-flip {
       position: absolute;
       inset: 0;
-      transform-style: preserve-3d;
-      transform-origin: left center;
+      transform-origin: center center;
       z-index: 6;
       pointer-events: none;
-      will-change: transform;
+      will-change: transform, opacity, clip-path;
       opacity: 0;
       visibility: hidden;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
     }
 
     .bpage-flip.flipping-next {
       opacity: 1;
       visibility: visible;
-      animation: flipToNext .9s cubic-bezier(.645,.045,.355,1) forwards;
+      animation: flipToNext .58s cubic-bezier(.22,.61,.36,1) forwards;
     }
 
     .bpage-flip.flipping-prev {
       opacity: 1;
       visibility: visible;
-      animation: flipToPrev .9s cubic-bezier(.645,.045,.355,1) forwards;
+      animation: flipToPrev .58s cubic-bezier(.22,.61,.36,1) forwards;
     }
 
     @keyframes flipToNext {
-      0%   { transform: rotateY(0deg); }
-      100% { transform: rotateY(-180deg); }
+      0%   { transform: translateX(0) rotateZ(0deg) scale(1); opacity: 1; clip-path: inset(0 0 0 0 round 22px 30px 30px 22px); }
+      48%  { transform: translateX(-38%) rotateZ(-4deg) scale(.985); opacity: .96; clip-path: inset(0 24% 0 0 round 22px 30px 30px 22px); }
+      100% { transform: translateX(-105%) rotateZ(-7deg) scale(.96); opacity: 0; clip-path: inset(0 100% 0 0 round 22px 30px 30px 22px); }
     }
 
     @keyframes flipToPrev {
-      0%   { transform: rotateY(-180deg); }
-      100% { transform: rotateY(0deg); }
+      0%   { transform: translateX(0) rotateZ(0deg) scale(1); opacity: 1; clip-path: inset(0 0 0 0 round 22px 30px 30px 22px); }
+      48%  { transform: translateX(38%) rotateZ(4deg) scale(.985); opacity: .96; clip-path: inset(0 0 0 24% round 22px 30px 30px 22px); }
+      100% { transform: translateX(105%) rotateZ(7deg) scale(.96); opacity: 0; clip-path: inset(0 0 0 100% round 22px 30px 30px 22px); }
     }
 
     .bpage-flip-face {
@@ -1534,13 +1532,11 @@
       inset: 0;
       border-radius: 22px 30px 30px 22px;
       overflow: hidden;
-      transform: translateZ(.2px);
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
+      transform: translateZ(0);
     }
 
     .bpage-flip-back {
-      transform: rotateY(180deg) translateZ(.2px);
+      display: none;
     }
 
     /* Lighting gradient – darkens at the fold edge */
@@ -1548,29 +1544,15 @@
       position: absolute;
       inset: 0;
       border-radius: 22px 30px 30px 22px;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
       pointer-events: none;
       z-index: 2;
-      background: linear-gradient(to left,
-        rgba(106,64,31,.0) 0%,
-        rgba(106,64,31,.28) 92%,
-        rgba(106,64,31,.46) 100%);
+      background:
+        linear-gradient(to left, rgba(106,64,31,.0) 0%, rgba(106,64,31,.20) 86%, rgba(106,64,31,.38) 100%),
+        linear-gradient(to right, rgba(255,255,255,.28), transparent 42%);
     }
 
     .bpage-flip-light-back {
-      position: absolute;
-      inset: 0;
-      border-radius: 22px 30px 30px 22px;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-      transform: rotateY(180deg);
-      pointer-events: none;
-      z-index: 2;
-      background: linear-gradient(to right,
-        rgba(106,64,31,.0) 0%,
-        rgba(106,64,31,.22) 90%,
-        rgba(106,64,31,.40) 100%);
+      display: none;
     }
 
     /* Shadow cast on the under-page as flip lifts */
@@ -1578,8 +1560,6 @@
       position: absolute;
       inset: 0;
       border-radius: 22px 30px 30px 22px;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
       pointer-events: none;
       z-index: 2;
       opacity: 0;
@@ -1587,7 +1567,7 @@
 
     .flipping-next .bpage-flip-shadow,
     .flipping-prev .bpage-flip-shadow {
-      animation: shadowPulse .9s ease-in-out forwards;
+      animation: shadowPulse .58s ease-in-out forwards;
     }
 
     @keyframes shadowPulse {
@@ -3340,18 +3320,17 @@
     void flipEl.offsetWidth;
     flipEl.style.animation = '';
 
-    /* Pre-populate faces. Keep #bpageCurrent on the old page until animationend
-       so the page underneath does not flash early during the flip. */
+    /* Pre-populate a single moving page over the destination page.
+       Avoiding a rotating back face prevents mobile Safari flicker. */
     if (direction === 'next') {
       fillPage(flipFront, pages[oldIndex]);   /* departing page on front */
-      fillPage(flipBack,  pages[newIndex]);   /* arriving page on back */
+      flipBack.innerHTML = '';
       fillPage(under,     pages[newIndex]);   /* revealed under the peel */
       fillPage(current,   pages[oldIndex]);
       flipEl.className = 'bpage-flip flipping-next';
     } else {
-      /* Prev: flip arrives from the left (starts at -180°, goes to 0°) */
-      fillPage(flipFront, pages[newIndex]);   /* arriving prev page on front */
-      fillPage(flipBack,  pages[oldIndex]);   /* departing current on back (shown at start) */
+      fillPage(flipFront, pages[oldIndex]);   /* departing page slides right */
+      flipBack.innerHTML = '';
       fillPage(under,     pages[newIndex]);   /* under shows destination */
       fillPage(current,   pages[oldIndex]);
       flipEl.className = 'bpage-flip flipping-prev';
