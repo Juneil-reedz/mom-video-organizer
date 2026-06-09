@@ -1582,102 +1582,159 @@
       fill: none;
     }
 
-    /* ─── Responsive ─── */
+    /* ═══════════════════════════════════════════
+       RESPONSIVE BREAKPOINTS
+       ─────────────────────────────────────────
+       600px  — tablet portrait
+       820px  — tablet landscape / small desktop
+       1100px — desktop (persistent sidebar)
+       ═══════════════════════════════════════════ */
 
-    /* Tablet: 600px — 2-col forms, wider cards */
+    /* ── 600px: Tablet portrait ── */
     @media (min-width: 600px) {
       .form-grid { grid-template-columns: repeat(2, 1fr); }
       .caption-row .form-grid { grid-template-columns: repeat(2, 1fr); }
-      .view { padding-left: 24px; padding-right: 24px; }
-      .bookview { width: min(360px, 82vw); }
-      .book3d-cover-btn { width: min(240px, 56vw); }
+      .view { padding-left: 28px; padding-right: 28px; }
+      .photo-grid-inner { grid-template-columns: repeat(4, 1fr); }
+      .bookview { width: min(380px, 82vw); }
+      .book3d-cover-btn { width: min(260px, 58vw); }
     }
 
-    /* Tablet landscape / small desktop: 820px — side-by-side layout */
+    /* ── 820px: Tablet landscape / small desktop ── */
     @media (min-width: 820px) {
-      /* App shell becomes a centred, fixed-width column on the left
-         with the album view taking up the right panel */
-      .app {
-        max-width: 1100px;
-        margin: 0 auto;
-        flex-direction: row;  /* header | content side by side? No — keep column but wider */
-        flex-direction: column;
-      }
+      .app { max-width: 1200px; margin: 0 auto; }
 
-      /* Restore column for the shell */
-      .app { flex-direction: column; }
+      .drawer { width: min(340px, 75vw); }
+      .bottom-nav { max-width: 1200px; left: 50%; transform: translateX(-50%); }
 
-      /* Studio view: 2-column grid (settings left, preview right) */
+      /* Studio: left controls | right sticky preview */
       #studioView {
         display: grid;
-        grid-template-columns: 320px 1fr;
+        grid-template-columns: 340px 1fr;
         grid-template-rows: auto;
-        column-gap: 18px;
+        column-gap: 20px;
         align-items: start;
-        padding-top: 20px;
-        padding-bottom: calc(var(--tab-height) + var(--safe-bottom) + 20px);
+        padding-top: 24px;
+        padding-bottom: calc(var(--tab-height) + var(--safe-bottom) + 24px);
       }
-
-      /* Left column: upload + photo strip + settings + captions + actions */
-      #uploadSection       { grid-column: 1; }
-      #studioView > .card:nth-child(2) { grid-column: 1; } /* photo strip card */
-      #settingsSection     { grid-column: 1; }
-      #captionSection      { grid-column: 1; }
-      .studio-actions      { grid-column: 1; }
-
-      /* Right column: page preview spans remaining rows */
-      #previewSection {
+      #uploadSection   { grid-column: 1; }
+      #settingsSection { grid-column: 1; }
+      #captionSection  { grid-column: 1; }
+      .studio-actions  { grid-column: 1; }
+      #previewSection  {
         grid-column: 2;
         grid-row: 1 / span 5;
         position: sticky;
-        top: 16px;
+        top: 20px;
       }
-
       .album-page { max-width: 100%; }
 
-      /* Album view: book left, saved pages right */
+      /* Album: book | saved list sticky */
       #albumView {
         display: grid;
-        grid-template-columns: 1fr 340px;
-        column-gap: 18px;
+        grid-template-columns: 1fr 360px;
+        column-gap: 20px;
         align-items: start;
-        padding-top: 20px;
-        padding-bottom: calc(var(--tab-height) + var(--safe-bottom) + 20px);
+        padding-top: 24px;
+        padding-bottom: calc(var(--tab-height) + var(--safe-bottom) + 24px);
       }
-
       #bookSection  { grid-column: 1; }
-      #savedSection { grid-column: 2; grid-row: 1; position: sticky; top: 16px; }
+      #savedSection { grid-column: 2; grid-row: 1; position: sticky; top: 20px; }
 
-      .bookview { width: min(420px, 90%); }
-      .book3d-cover-btn { width: min(280px, 60%); }
-
-      /* Bottom nav stays at bottom, full width capped */
-      .bottom-nav { max-width: 1100px; left: 50%; transform: translateX(-50%); }
-
-      /* Drawer wider on tablet */
-      .drawer { width: min(340px, 75vw); }
+      .bookview { width: min(440px, 90%); }
+      .book3d-cover-btn { width: min(290px, 62%); }
     }
 
-    /* Desktop: 1100px — max content width, more breathing room */
+    /* ── 1100px: Desktop — sidebar always visible ── */
     @media (min-width: 1100px) {
-      .app { max-width: 1200px; margin: 0 auto; }
-      .bottom-nav { max-width: 1200px; }
-      .view { padding-left: 32px; padding-right: 32px; }
+      :root { --sidebar-width: 264px; }
 
-      #studioView { grid-template-columns: 360px 1fr; column-gap: 24px; }
-      #albumView  { grid-template-columns: 1fr 380px; column-gap: 24px; }
-
-      .bookview { width: min(460px, 90%); }
-      .book3d-cover-btn { width: min(300px, 60%); }
-
-      .drawer { width: 360px; }
-
-      /* Photo strip becomes a 3-col grid on desktop */
-      .photo-strip {
+      /* App becomes a CSS grid: sidebar col | content col, header spans both */
+      .app {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-        overflow-x: visible;
+        grid-template-columns: var(--sidebar-width) 1fr;
+        grid-template-rows: auto 1fr;
+        height: 100dvh;
+        overflow: hidden;
+        max-width: none;
+        margin: 0;
       }
+
+      /* Header: full width across both columns */
+      .app-header { grid-column: 1 / -1; grid-row: 1; }
+
+      /* Backdrop: never needed on desktop */
+      .drawer-backdrop { display: none !important; }
+
+      /* Hamburger: hidden — sidebar is always open */
+      .hamburger { display: none; }
+
+      /* Drawer → permanent sidebar in grid column 1 */
+      .drawer {
+        grid-column: 1;
+        grid-row: 2;
+        position: static;          /* escape fixed — lives in grid flow */
+        transform: none !important;
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        border-radius: 0;
+        box-shadow: none;
+        border-right: 1px solid var(--glass-border);
+        z-index: 5;
+        top: auto; left: auto; bottom: auto;
+      }
+      .drawer-close-btn { display: none; }
+
+      /* View container: grid column 2 */
+      .view-container { grid-column: 2; grid-row: 2; }
+
+      /* Bottom nav: shift right to clear the sidebar */
+      .bottom-nav {
+        left: var(--sidebar-width);
+        right: 0;
+        max-width: none;
+        transform: none;
+      }
+
+      /* Studio: wider 2-col grid */
+      #studioView {
+        grid-template-columns: 380px 1fr;
+        column-gap: 28px;
+        padding-left: 36px;
+        padding-right: 36px;
+        padding-top: 28px;
+      }
+
+      /* Album: wider 2-col grid */
+      #albumView {
+        grid-template-columns: 1fr 420px;
+        column-gap: 28px;
+        padding-left: 36px;
+        padding-right: 36px;
+        padding-top: 28px;
+      }
+
+      .bookview { width: min(500px, 92%); }
+      .book3d-cover-btn { width: min(320px, 68%); }
+
+      /* Photo grid: 5 cols on desktop */
+      .photo-grid-inner {
+        grid-template-columns: repeat(5, 1fr);
+        max-height: 480px;
+      }
+
+      /* Album page: fill the sticky column */
+      .album-page { max-width: 100%; aspect-ratio: 1 / 1.15; }
+
+      /* Drawer top: no need for separate branding row on desktop
+         (header already shows it) — keep it compact */
+      .drawer-top {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--glass-border);
+      }
+      .drawer-brand strong { font-size: .9rem; }
+      .drawer-brand span   { font-size: .72rem; }
     }
 
     /* ─── Pill badge for tab ─── */
