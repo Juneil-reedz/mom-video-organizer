@@ -1118,36 +1118,59 @@
 
     function generateThumbnail(file) {
       return new Promise(resolve => {
+        let settled = false;
         const url = URL.createObjectURL(file);
-        const video = document.createElement('video');
-        video.preload = 'metadata'; video.muted = true; video.src = url;
-        video.onloadeddata = () => {
-          try {
-            if (!video.duration || video.duration < .2) capture();
-            else video.currentTime = Math.min(1, video.duration);
-          } catch { capture(); }
-        };
-        video.onseeked = capture;
-        video.onerror = () => { URL.revokeObjectURL(url); resolve({ thumb: '', duration: 0 }); };
-        function capture() {
-          const canvas = document.createElement('canvas');
-          canvas.width = 640; canvas.height = 360;
-          const ctx = canvas.getContext('2d');
-          ctx.fillStyle = '#f6d8ef';
-          ctx.fillRect(0, 0, 640, 360);
-          const ratio = Math.max(640 / video.videoWidth, 360 / video.videoHeight);
-          const w = video.videoWidth * ratio, h = video.videoHeight * ratio;
-          ctx.drawImage(video, (640 - w) / 2, (360 - h) / 2, w, h);
-          const thumb = canvas.toDataURL('image/jpeg', .82);
-          const duration = video.duration || 0;
+        const vid = document.createElement('video');
+        vid.preload = 'metadata';
+        vid.muted = true;
+        vid.playsInline = true;
+        vid.setAttribute('playsinline', '');
+        vid.src = url;
+
+        const done = (thumb = '', duration = 0) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(bail);
           URL.revokeObjectURL(url);
           resolve({ thumb, duration });
-        }
+        };
+
+        // Safety net — never block forever on iPhone
+        const bail = setTimeout(() => done('', 0), 7000);
+
+        const capture = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 480; canvas.height = 270;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#f6d8ef';
+            ctx.fillRect(0, 0, 480, 270);
+            if (vid.videoWidth > 0 && vid.videoHeight > 0) {
+              const r = Math.max(480 / vid.videoWidth, 270 / vid.videoHeight);
+              const w = vid.videoWidth * r, h = vid.videoHeight * r;
+              ctx.drawImage(vid, (480 - w) / 2, (270 - h) / 2, w, h);
+            }
+            done(canvas.toDataURL('image/jpeg', .8), vid.duration || 0);
+          } catch { done('', vid.duration || 0); }
+        };
+
+        vid.onloadedmetadata = () => {
+          const dur = vid.duration;
+          if (!dur || dur < .1 || !isFinite(dur)) { capture(); return; }
+          try { vid.currentTime = Math.min(1, dur * .1); } catch { capture(); }
+        };
+        vid.onseeked = capture;
+        // Fallback: if onseeked never fires but data is ready, capture anyway
+        vid.onloadeddata = () => { if (!settled) capture(); };
+        vid.onerror = () => done();
       });
     }
 
     async function handleFiles(files) {
-      const videoFiles = Array.from(files).filter(f => f.type.startsWith('video/'));
+      const videoFiles = Array.from(files).filter(f =>
+        f.type.startsWith('video/') ||
+        /\.(mp4|mov|m4v|avi|mkv|webm|3gp|hevc)$/i.test(f.name)
+      );
       if (!videoFiles.length) return showToast('No video files found.');
       showToast(`Adding ${videoFiles.length} video${videoFiles.length > 1 ? 's' : ''}…`);
       for (const file of videoFiles) {
@@ -1160,7 +1183,9 @@
           tags: defaultTags(title, els.quickTitle.value),
           caption: suggestCaption(title, els.quickTitle.value.trim()),
           posted: false, createdAt: Date.now(),
-          duration, fileName: file.name, type: file.type, size: file.size,
+          duration, fileName: file.name,
+          type: file.type || 'video/mp4',
+          size: file.size,
           thumb, blob: file
         });
       }
