@@ -140,110 +140,6 @@
       animation: prog-fill 3s linear forwards;
     }
 
-    /* ── GOODBYE ── */
-    .goodbye-screen {
-      position: fixed; inset: 0; z-index: 60;
-      display: grid; place-items: center; padding: 24px;
-      background: linear-gradient(145deg, #2a0a30 0%, #5f176a 45%, #9c3060 75%, #d7a63a 100%);
-      opacity: 0; visibility: hidden; pointer-events: none;
-      transition: opacity .35s ease, visibility .35s ease;
-      overflow: hidden;
-    }
-    .goodbye-screen::before {
-      content: "";
-      position: absolute; inset: -40%;
-      background:
-        radial-gradient(ellipse 60% 40% at 20% 30%, rgba(215,166,58,.35), transparent 55%),
-        radial-gradient(ellipse 50% 50% at 80% 20%, rgba(216,79,159,.4), transparent 55%);
-      animation: blob-drift 8s ease-in-out infinite alternate;
-      pointer-events: none;
-    }
-    .goodbye-screen.show { opacity: 1; visibility: visible; pointer-events: auto; }
-
-    .goodbye-card {
-      position: relative; z-index: 1;
-      width: min(440px, 100%);
-      padding: clamp(36px, 6vw, 54px) clamp(28px, 5vw, 46px);
-      border-radius: 28px;
-      background: rgba(255,255,255,.1);
-      backdrop-filter: blur(28px) saturate(1.5);
-      border: 1px solid rgba(255,255,255,.22);
-      box-shadow: 0 32px 80px rgba(0,0,0,.4), 0 0 0 1px rgba(215,166,58,.3) inset;
-      text-align: center;
-      display: grid;
-      justify-items: center;
-      gap: 18px;
-    }
-
-    .goodbye-logo {
-      width: clamp(80px, 20vw, 110px);
-      aspect-ratio: 1; border-radius: 22px; object-fit: cover;
-      box-shadow: 0 16px 40px rgba(0,0,0,.4), 0 0 0 3px rgba(215,166,58,.5), 0 0 0 6px rgba(215,166,58,.15);
-    }
-
-    .goodbye-card h2 {
-      margin: 0; font-family: var(--font-display);
-      font-size: clamp(2rem, 6vw, 3rem);
-      color: white; line-height: 1;
-      text-shadow: 0 2px 16px rgba(0,0,0,.3);
-    }
-
-    .goodbye-card p { margin: 0; color: rgba(255,255,255,.78); font-size: 1rem; line-height: 1.65; }
-
-    .goodbye-actions {
-      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
-    }
-    .goodbye-actions .button {
-      background: rgba(255,255,255,.15);
-      border: 1px solid rgba(255,255,255,.3);
-      backdrop-filter: blur(8px);
-      color: white;
-      box-shadow: none;
-    }
-    .goodbye-actions .button:first-child {
-      background: linear-gradient(135deg, var(--gold), var(--pink));
-      border: none;
-    }
-
-    /* ── GOODBYE ── */
-    .goodbye-screen {
-      position: fixed; inset: 0; z-index: 60;
-      display: grid; place-items: center; padding: 24px;
-      background: linear-gradient(150deg, #fff8fd 0%, #f6d8ef 55%, #fff0bd 100%);
-      opacity: 0; visibility: hidden; pointer-events: none;
-      transition: opacity .35s ease, visibility .35s ease;
-    }
-    .goodbye-screen.show { opacity: 1; visibility: visible; pointer-events: auto; }
-
-    .goodbye-card {
-      width: min(480px, 100%);
-      padding: clamp(36px, 6vw, 56px) clamp(28px, 5vw, 48px);
-      border-radius: 24px;
-      background: white;
-      box-shadow: var(--shadow-lg), 0 0 0 1px rgba(215,166,58,.12);
-      text-align: center;
-      display: grid;
-      justify-items: center;
-      gap: 16px;
-    }
-
-    .goodbye-logo {
-      width: clamp(80px, 20vw, 108px);
-      aspect-ratio: 1; border-radius: 20px; object-fit: cover;
-      box-shadow: 0 12px 32px rgba(95,23,106,.18);
-    }
-
-    .goodbye-card h2 {
-      margin: 0; font-family: var(--font-display);
-      font-size: clamp(2rem, 6vw, 3rem);
-      color: var(--purple-dark); line-height: 1;
-    }
-
-    .goodbye-card p { margin: 0; color: var(--muted); font-size: 1rem; line-height: 1.65; }
-
-    .goodbye-actions {
-      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
-    }
 
     /* ── BUTTONS ── */
     .button {
@@ -748,8 +644,8 @@
         overflow-y: auto;
       }
 
-      /* Welcome / Goodbye cards */
-      .welcome-card, .goodbye-card {
+      /* Welcome card */
+      .welcome-card {
         border-radius: 20px;
         padding: 32px 22px;
       }
@@ -780,18 +676,6 @@
     </div>
   </section>
 
-  <!-- Goodbye -->
-  <section class="goodbye-screen" id="goodbyeScreen" aria-label="Goodbye">
-    <div class="goodbye-card">
-      <img class="goodbye-logo" src="queen-nur-logo.png" alt="Queen Nur logo">
-      <h2>I LOVE YOU OMONI</h2>
-      <p>Thank you for saving another memory. Come back anytime, Queen Nur.</p>
-      <div class="goodbye-actions">
-        <button class="button" id="stayAppBtn" type="button">Stay in App</button>
-        <button class="button secondary" id="finishCloseBtn" type="button">Close Tab</button>
-      </div>
-    </div>
-  </section>
 
   <!-- Full-page drop overlay -->
   <div class="drop-overlay" id="dropOverlay" aria-hidden="true">
@@ -1061,9 +945,6 @@
       drawer:           document.querySelector('#drawer'),
       welcome:          document.querySelector('#welcomeScreen'),
       skipWelcome:      document.querySelector('#skipWelcomeBtn'),
-      goodbye:          document.querySelector('#goodbyeScreen'),
-      stayApp:          document.querySelector('#stayAppBtn'),
-      finishClose:      document.querySelector('#finishCloseBtn')
     };
 
     let db;
@@ -1487,9 +1368,6 @@
     function openDrawer()  { document.body.classList.add('drawer-open'); }
     function closeDrawer() { document.body.classList.remove('drawer-open'); }
     function closeWelcome(){ els.welcome.classList.add('hidden'); }
-    function showGoodbye() { closeDrawer(); els.goodbye.classList.add('show'); }
-    function hideGoodbye() { els.goodbye.classList.remove('show'); }
-    function finishClose() { showToast('You can now close the tab.'); window.close(); }
 
     /* Event listeners */
     els.input.addEventListener('change', e => handleFiles(e.target.files));
@@ -1508,16 +1386,8 @@
     els.closeDrawer.addEventListener('click', closeDrawer);
     els.drawerOverlay.addEventListener('click', closeDrawer);
     els.skipWelcome.addEventListener('click', closeWelcome);
-    els.stayApp.addEventListener('click', hideGoodbye);
-    els.finishClose.addEventListener('click', finishClose);
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
-    if (localStorage.getItem('qn_goodbye')) {
-      localStorage.removeItem('qn_goodbye');
-      // Show goodbye briefly after welcome fades so she sees the love note on every return
-      setTimeout(() => { closeWelcome(); showGoodbye(); }, 1200);
-    } else {
-      setTimeout(closeWelcome, 3000);
-    }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+    setTimeout(closeWelcome, 3000);
 
     els.applyEvent.addEventListener('click', () => {
       if (!els.quickTitle.value.trim()) return showToast('Add an event name first.');
@@ -1534,11 +1404,6 @@
       closeDrawer();
     });
 
-    // When she leaves the app (home button, tab close, switch app), save a flag
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') localStorage.setItem('qn_goodbye', '1');
-    });
-    window.addEventListener('pagehide', () => localStorage.setItem('qn_goodbye', '1'));
 
     /* Full-page drag-and-drop */
     let dragDepth = 0;
