@@ -375,19 +375,19 @@
     }
 
     .book-spread {
-      width: min(960px, 100%);
+      width: min(520px, 100%);
       display: none;
-      grid-template-columns: 1fr 1fr;
-      gap: 0;
+      grid-template-columns: 1fr;
       transform-style: preserve-3d;
-      box-shadow: 0 28px 80px rgba(106, 64, 31, .2);
+      box-shadow: 0 28px 80px rgba(106, 64, 31, .22);
       border-radius: 18px;
       overflow: hidden;
-      background: linear-gradient(90deg, #fffaf0, #e6cfa8 50%, #fffaf0);
+      background: #fffaf0;
     }
 
     .book.open .book-cover { display: none; }
     .book.open .book-spread { display: grid; animation: book-open .55s ease both; }
+    .book.flipping .book-page { animation: page-flip .5s ease both; }
 
     .book-page {
       min-height: 430px;
@@ -399,15 +399,19 @@
       grid-template-rows: auto 1fr auto;
       gap: 10px;
       position: relative;
+      border: 0;
+      cursor: pointer;
+      transform-origin: left center;
     }
 
-    .book-page.left {
-      border-right: 1px solid rgba(106, 64, 31, .18);
-      box-shadow: inset -16px 0 22px rgba(106, 64, 31, .08);
-    }
-
-    .book-page.right {
-      box-shadow: inset 16px 0 22px rgba(106, 64, 31, .08);
+    .book-page::after {
+      content: "Tap page to flip";
+      position: absolute;
+      right: 14px;
+      bottom: 10px;
+      color: rgba(106, 64, 31, .48);
+      font-size: .78rem;
+      font-weight: 900;
     }
 
     .book-page h3 {
@@ -474,6 +478,12 @@
     @keyframes book-open {
       from { transform: rotateX(4deg) scale(.94); opacity: .2; }
       to { transform: rotateX(0) scale(1); opacity: 1; }
+    }
+
+    @keyframes page-flip {
+      0% { transform: rotateY(0); opacity: 1; }
+      45% { transform: rotateY(-55deg); opacity: .35; }
+      100% { transform: rotateY(0); opacity: 1; }
     }
 
     .stage-head {
@@ -750,14 +760,7 @@
         aspect-ratio: .78 / 1;
       }
 
-      .book-spread {
-        grid-template-columns: 1fr;
-      }
-
-      .book-page.left {
-        border-right: 0;
-        border-bottom: 1px solid rgba(106, 64, 31, .18);
-      }
+      .book-spread { width: min(430px, 100%); }
 
       .layout-6 {
         grid-template-columns: repeat(2, 1fr);
@@ -813,9 +816,6 @@
             Photos/Page
             <select id="layoutCount">
               <option value="4">4 Photos</option>
-              <option value="1">1 Photo</option>
-              <option value="2">2 Photos</option>
-              <option value="6">6 Photos</option>
             </select>
           </label>
           <label>
@@ -898,15 +898,12 @@
                 </div>
               </button>
               <div class="book-spread">
-                <article class="book-page left" id="bookLeft"></article>
-                <article class="book-page right" id="bookRight"></article>
+                <article class="book-page" id="bookPage" title="Tap to flip page"></article>
               </div>
             </div>
           </div>
           <div class="book-controls">
-            <button class="button secondary" id="prevSpreadBtn" type="button">Previous Pages</button>
             <button class="button" id="openBookBtn" type="button">Open Book</button>
-            <button class="button secondary" id="nextSpreadBtn" type="button">Next Pages</button>
           </div>
         </section>
 
@@ -952,7 +949,7 @@
       captions: JSON.parse(localStorage.getItem('fatimaAlbumCaptions') || '{}'),
       selected: [],
       bookOpen: false,
-      spread: 0
+      pageIndex: 0
     };
 
     const els = {
@@ -975,10 +972,7 @@
       bookCover: document.querySelector('#bookCover'),
       openBook: document.querySelector('#openBookBtn'),
       closeBook: document.querySelector('#closeBookBtn'),
-      prevSpread: document.querySelector('#prevSpreadBtn'),
-      nextSpread: document.querySelector('#nextSpreadBtn'),
-      bookLeft: document.querySelector('#bookLeft'),
-      bookRight: document.querySelector('#bookRight'),
+      bookPage: document.querySelector('#bookPage'),
       previewTitle: document.querySelector('#previewTitle'),
       previewNote: document.querySelector('#previewNote'),
       albumPage: document.querySelector('#albumPage'),
@@ -1231,7 +1225,7 @@
     function savePage() {
       const settings = pageSettings();
       state.pages.unshift({ id: crypto.randomUUID(), createdAt: Date.now(), ...settings });
-      state.spread = 0;
+      state.pageIndex = 0;
       persist();
       render();
     }
@@ -1253,7 +1247,7 @@
 
     function deletePage(id) {
       state.pages = state.pages.filter(page => page.id !== id);
-      state.spread = Math.max(0, Math.min(state.spread, Math.ceil(bookPages().length / 2) - 1));
+      state.pageIndex = Math.max(0, Math.min(state.pageIndex, bookPages().length - 1));
       persist();
       render();
     }
@@ -1273,26 +1267,20 @@
       renderBook();
     }
 
-    function nextSpread() {
-      const max = Math.max(0, Math.ceil(bookPages().length / 2) - 1);
-      state.spread = Math.min(max, state.spread + 1);
+    function flipBookPage() {
+      const pages = bookPages();
+      state.pageIndex = pages.length ? (state.pageIndex + 1) % pages.length : 0;
       state.bookOpen = true;
-      renderBook();
-    }
-
-    function prevSpread() {
-      state.spread = Math.max(0, state.spread - 1);
-      state.bookOpen = true;
+      els.book.classList.add('flipping');
+      setTimeout(() => els.book.classList.remove('flipping'), 520);
       renderBook();
     }
 
     function renderBook() {
       els.book.classList.toggle('open', state.bookOpen);
       const pages = bookPages();
-      const left = pages[state.spread * 2];
-      const right = pages[state.spread * 2 + 1];
-      renderBookPage(els.bookLeft, left, 'Album Page');
-      renderBookPage(els.bookRight, right, right ? 'Album Page' : 'Next page waiting');
+      state.pageIndex = Math.max(0, Math.min(state.pageIndex, pages.length - 1));
+      renderBookPage(els.bookPage, pages[state.pageIndex], 'Album Page');
     }
 
     function renderBookPage(target, page, fallbackTitle) {
@@ -1485,8 +1473,7 @@
     els.bookCover.addEventListener('click', openBook);
     els.openBook.addEventListener('click', openBook);
     els.closeBook.addEventListener('click', closeBook);
-    els.nextSpread.addEventListener('click', nextSpread);
-    els.prevSpread.addEventListener('click', prevSpread);
+    els.bookPage.addEventListener('click', flipBookPage);
     [els.pageTitle, els.layoutCount, els.pageStyle, els.templateStyle, els.frameStyle, els.stickerStyle, els.pageNote].forEach(input => {
       input.addEventListener('input', renderPreview);
       input.addEventListener('change', render);
