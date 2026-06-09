@@ -418,7 +418,7 @@
 
     .card-actions {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
     }
 
@@ -783,7 +783,7 @@
       }
 
       .card-actions {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 
       .brand {
@@ -979,6 +979,13 @@
               <option>Only me</option>
             </select>
           </label>
+          <label>
+            Facebook
+            <select id="editFacebookTarget">
+              <option value="feed">Feed</option>
+              <option value="reels">Reels</option>
+            </select>
+          </label>
           <label class="full">
             Tags
             <input id="editTags" placeholder="family, food, funny">
@@ -996,6 +1003,36 @@
       <div class="modal-actions">
         <button class="button secondary" value="cancel" type="submit">Cancel</button>
         <button class="button" id="saveEditBtn" value="default" type="button">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="postDialog">
+    <form method="dialog">
+      <div class="modal-head">
+        <h2>Post to Facebook</h2>
+        <button class="icon-button" value="cancel" type="submit" title="Close">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="postId">
+        <label>
+          Choose where to post
+          <select id="postTarget">
+            <option value="feed">Facebook Feed</option>
+            <option value="reels">Facebook Reels</option>
+          </select>
+        </label>
+        <label>
+          Caption
+          <textarea id="postCaption" readonly></textarea>
+        </label>
+        <p class="subtitle">The app can prepare the video and caption, but Facebook will still ask her to confirm the final post.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="button secondary" id="copyCaptionBtn" value="default" type="button">Copy Caption</button>
+        <button class="button" id="shareFacebookBtn" value="default" type="button">Share/Open Facebook</button>
       </div>
     </form>
   </dialog>
@@ -1029,11 +1066,18 @@
       editEvent: document.querySelector('#editEvent'),
       editDate: document.querySelector('#editDate'),
       editPrivacy: document.querySelector('#editPrivacy'),
+      editFacebookTarget: document.querySelector('#editFacebookTarget'),
       editTags: document.querySelector('#editTags'),
       editCaption: document.querySelector('#editCaption'),
       editPosted: document.querySelector('#editPosted'),
       saveEdit: document.querySelector('#saveEditBtn'),
-      toast: document.querySelector('#toast')
+      toast: document.querySelector('#toast'),
+      postDialog: document.querySelector('#postDialog'),
+      postId: document.querySelector('#postId'),
+      postTarget: document.querySelector('#postTarget'),
+      postCaption: document.querySelector('#postCaption'),
+      copyCaption: document.querySelector('#copyCaptionBtn'),
+      shareFacebook: document.querySelector('#shareFacebookBtn')
       ,
       openDrawer: document.querySelector('#openDrawerBtn'),
       closeDrawer: document.querySelector('#closeDrawerBtn'),
@@ -1163,6 +1207,7 @@
           event: els.quickTitle.value.trim(),
           date: today(),
           privacy: 'Friends',
+          facebookTarget: 'feed',
           tags: defaultTags(title, els.quickTitle.value),
           caption: suggestCaption(title, els.quickTitle.value.trim()),
           posted: false,
@@ -1279,6 +1324,7 @@
             <span>${escapeHtml(video.event || 'No event')}</span>
             <span>${formatDate(video.date)}</span>
             <span>${escapeHtml(video.privacy || 'Friends')}</span>
+            <span>${video.facebookTarget === 'reels' ? 'Reels' : 'Feed'}</span>
           </div>
           <div class="tags">${tags || '<span class="tag">family</span>'}</div>
           <div class="card-actions">
@@ -1288,6 +1334,9 @@
             <button class="icon-button" data-action="edit" title="Edit details" type="button">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
             </button>
+            <button class="icon-button" data-action="facebook" title="Post to Facebook" type="button">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            </button>
             <button class="icon-button danger" data-action="delete" title="Delete video" type="button">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
             </button>
@@ -1295,6 +1344,7 @@
         </div>`;
       card.querySelector('[data-action="play"]').addEventListener('click', () => playVideo(video));
       card.querySelector('[data-action="edit"]').addEventListener('click', () => openEditor(video));
+      card.querySelector('[data-action="facebook"]').addEventListener('click', () => openPostDialog(video));
       card.querySelector('[data-action="delete"]').addEventListener('click', () => removeVideo(video));
       return card;
     }
@@ -1332,6 +1382,7 @@
       els.editEvent.value = video.event || '';
       els.editDate.value = video.date || '';
       els.editPrivacy.value = video.privacy || 'Friends';
+      els.editFacebookTarget.value = video.facebookTarget || 'feed';
       els.editTags.value = (video.tags || []).join(', ');
       els.editCaption.value = video.caption || '';
       els.editPosted.checked = Boolean(video.posted);
@@ -1345,6 +1396,7 @@
       video.event = els.editEvent.value.trim();
       video.date = els.editDate.value;
       video.privacy = els.editPrivacy.value;
+      video.facebookTarget = els.editFacebookTarget.value;
       video.tags = els.editTags.value.split(',').map(tag => tag.trim()).filter(Boolean);
       video.caption = els.editCaption.value.trim();
       video.posted = els.editPosted.checked;
@@ -1359,6 +1411,57 @@
       await deleteVideo(video.id);
       await refresh();
       showToast('Video deleted.');
+    }
+
+    function openPostDialog(video) {
+      els.postId.value = video.id;
+      els.postTarget.value = video.facebookTarget || 'feed';
+      els.postCaption.value = video.caption || suggestCaption(video.title, video.event);
+      els.postDialog.showModal();
+    }
+
+    function currentPostVideo() {
+      return videos.find(video => video.id === els.postId.value);
+    }
+
+    async function copyPostCaption() {
+      const caption = els.postCaption.value.trim();
+      if (!caption) return showToast('No caption to copy.');
+      try {
+        await navigator.clipboard.writeText(caption);
+        showToast('Caption copied.');
+      } catch {
+        els.postCaption.select();
+        showToast('Select and copy the caption.');
+      }
+    }
+
+    async function shareToFacebook() {
+      const video = currentPostVideo();
+      if (!video) return;
+      const target = els.postTarget.value;
+      video.facebookTarget = target;
+      await putVideo(video);
+      await refresh();
+      const file = new File([video.blob], video.fileName || `${video.title}.mp4`, { type: video.type || 'video/mp4' });
+      const shareData = {
+        title: video.title,
+        text: els.postCaption.value.trim(),
+        files: [file]
+      };
+      if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+        try {
+          await navigator.share(shareData);
+          els.postDialog.close();
+          showToast(`Choose Facebook ${target === 'reels' ? 'Reels' : 'Feed'} to finish.`);
+          return;
+        } catch {
+          showToast('Share canceled. Opening Facebook.');
+        }
+      }
+      await copyPostCaption();
+      window.open(target === 'reels' ? 'https://www.facebook.com/reels/create' : 'https://www.facebook.com/', '_blank');
+      showToast('Facebook opened. Choose the video and paste the caption.');
     }
 
     function exportList() {
@@ -1402,6 +1505,8 @@
     els.sort.addEventListener('change', render);
     els.exportBtn.addEventListener('click', exportList);
     els.saveEdit.addEventListener('click', saveEdit);
+    els.copyCaption.addEventListener('click', copyPostCaption);
+    els.shareFacebook.addEventListener('click', shareToFacebook);
     els.gridBtn.addEventListener('click', () => { view = 'grid'; render(); });
     els.listBtn.addEventListener('click', () => { view = 'list'; render(); });
     els.openDrawer.addEventListener('click', openDrawer);
