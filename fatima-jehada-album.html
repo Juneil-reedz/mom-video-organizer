@@ -1706,11 +1706,21 @@
       padding: 14px;
       display: grid;
       gap: 10px;
-      max-height: min(42dvh, 420px);
+      max-height: min(34dvh, 320px);
       overflow-y: auto;
       overscroll-behavior-y: contain;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
+    }
+
+    .book-saved-panel {
+      border-top: 1px solid var(--glass-border);
+      background: linear-gradient(180deg, rgba(255,255,255,.24), rgba(255,245,213,.28));
+    }
+
+    .book-saved-panel .card-header {
+      padding-top: 14px;
+      padding-bottom: 6px;
     }
 
     .saved-card {
@@ -2114,7 +2124,7 @@
       }
       .album-page { max-width: 100%; }
 
-      /* Album: book | saved list sticky */
+      /* Album: saved pages live inside the book card */
       #albumView.active {
         display: flex;
         align-items: start;
@@ -2123,13 +2133,12 @@
       }
       #albumView .album-scroll-panel {
         display: grid;
-        grid-template-columns: 1fr 360px;
-        column-gap: 20px;
+        grid-template-columns: minmax(0, 760px);
+        justify-content: center;
         align-items: start;
       }
-      #bookSection  { grid-column: 1; }
-      #savedSection { grid-column: 2; grid-row: 1; position: sticky; top: 20px; max-height: calc(100dvh - 160px); overflow: hidden; }
-      #savedSection .saved-list { max-height: calc(100dvh - 255px); }
+      #bookSection { grid-column: 1; }
+      #savedSection .saved-list { max-height: min(32dvh, 300px); }
 
       .bookview { width: min(440px, 90%); }
       .book3d-cover-btn { width: min(290px, 62%); }
@@ -2211,8 +2220,7 @@
         padding-top: 28px;
       }
       #albumView .album-scroll-panel {
-        grid-template-columns: 1fr 420px;
-        column-gap: 28px;
+        grid-template-columns: minmax(0, 860px);
       }
 
       .bookview { width: min(500px, 92%); }
@@ -2568,19 +2576,18 @@
           <span id="pageCounter" style="font-size:.75rem;font-weight:700;color:var(--muted);">—</span>
           <span style="font-size:.65rem;color:var(--muted);opacity:.7">Swipe or tap corners to flip</span>
         </div>
-      </div>
-
-      <!-- Saved Pages -->
-      <div class="card" id="savedSection">
+        <!-- Saved Pages inside the book -->
+        <div class="book-saved-panel" id="savedSection">
         <div class="card-header">
           <div>
             <div class="card-title">Saved Pages</div>
-            <div class="card-subtitle">Your album collection</div>
+            <div class="card-subtitle">Pages stored inside this album book</div>
           </div>
         </div>
         <div class="saved-list" id="savedPages">
           <div class="empty-state">Saved album pages will appear here.</div>
         </div>
+      </div>
       </div>
 
       </div>
