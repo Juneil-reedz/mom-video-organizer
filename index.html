@@ -496,7 +496,7 @@
       font-size: .74rem; font-weight: 700;
     }
 
-    .card-actions { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
+    .card-actions { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; }
 
     .icon-button {
       min-height: 36px; display: inline-grid; place-items: center;
@@ -507,6 +507,8 @@
     .icon-button:hover { background: var(--soft); border-color: rgba(139,47,147,.2); }
     .icon-button.danger { color: var(--coral); }
     .icon-button.danger:hover { background: #fff0f3; border-color: var(--coral); }
+    .icon-button[data-action="share"] { color: #0084ff; }
+    .icon-button[data-action="share"]:hover { background: #e8f4ff; border-color: #0084ff; }
 
     /* list view */
     .library.list .grid { grid-template-columns: 1fr; }
@@ -1305,6 +1307,9 @@
             <button class="icon-button" data-action="facebook" title="Post to Facebook" type="button">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
             </button>
+            <button class="icon-button" data-action="share" title="Share to Messenger" type="button">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            </button>
             <button class="icon-button danger" data-action="delete" title="Delete video" type="button">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
             </button>
@@ -1313,12 +1318,34 @@
       card.querySelector('[data-action="play"]').addEventListener('click', () => playVideo(video));
       card.querySelector('[data-action="edit"]').addEventListener('click', () => openEditor(video));
       card.querySelector('[data-action="facebook"]').addEventListener('click', () => openPostDialog(video));
+      card.querySelector('[data-action="share"]').addEventListener('click', () => shareVideo(video));
       card.querySelector('[data-action="delete"]').addEventListener('click', () => removeVideo(video));
       return card;
     }
 
     function escapeHtml(v) {
       return String(v || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    async function shareVideo(video) {
+      try {
+        const ext = (video.title.match(/\.(mp4|mov|m4v|avi|mkv|webm|3gp)$/i) || ['', 'mp4'])[1];
+        const filename = video.title.replace(/[^a-z0-9_\-. ]/gi, '_') + (video.title.includes('.') ? '' : '.' + ext);
+        const file = new File([video.blob], filename, { type: video.blob.type || 'video/mp4' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: video.title,
+            text: video.caption || video.title,
+          });
+        } else if (navigator.share) {
+          await navigator.share({ title: video.title, text: video.caption || video.title });
+        } else {
+          alert('Sharing is not supported on this browser. Try opening the app in Safari on your iPhone.');
+        }
+      } catch (e) {
+        if (e.name !== 'AbortError') alert('Could not share: ' + e.message);
+      }
     }
 
     function playVideo(video) {
