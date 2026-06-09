@@ -2698,7 +2698,7 @@
         }
         /* Drag to pan · tap to edit */
         const _id = photo.id, _idx = i;
-        slot.style.touchAction = 'pan-y'; /* let phone users scroll the Studio from the preview */
+        slot.style.touchAction = 'none'; /* live-preview photo panning needs full pointer control */
         let panStart = null, cropBase = null, didPan = false;
 
         slot.addEventListener('pointerdown', e => {
