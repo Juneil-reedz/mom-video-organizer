@@ -928,6 +928,8 @@
       max-height: 82dvh;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+      touch-action: pan-y;
       padding-bottom: max(20px, env(safe-area-inset-bottom));
     }
     .photo-edit-sheet.open { transform: translateY(0); }
@@ -1133,6 +1135,14 @@
       /* Must be visible: the default card overflow:hidden clips the 3D
          page-stack offsets, drop-shadows, and perspective transforms */
       overflow: visible;
+    }
+
+    .album-scroll-panel {
+      display: grid;
+      gap: 14px;
+      overflow: visible;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
     }
 
     .bookview-scene {
@@ -1530,6 +1540,11 @@
       padding: 14px;
       display: grid;
       gap: 10px;
+      max-height: min(42dvh, 420px);
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
     }
 
     .saved-card {
@@ -1927,15 +1942,19 @@
 
       /* Album: book | saved list sticky */
       #albumView {
-        display: grid;
-        grid-template-columns: 1fr 360px;
-        column-gap: 20px;
         align-items: start;
         padding-top: 24px;
         padding-bottom: calc(var(--tab-height) + var(--safe-bottom) + 24px);
       }
+      #albumView .album-scroll-panel {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        column-gap: 20px;
+        align-items: start;
+      }
       #bookSection  { grid-column: 1; }
-      #savedSection { grid-column: 2; grid-row: 1; position: sticky; top: 20px; }
+      #savedSection { grid-column: 2; grid-row: 1; position: sticky; top: 20px; max-height: calc(100dvh - 160px); overflow: hidden; }
+      #savedSection .saved-list { max-height: calc(100dvh - 255px); }
 
       .bookview { width: min(440px, 90%); }
       .book3d-cover-btn { width: min(290px, 62%); }
@@ -2004,11 +2023,14 @@
 
       /* Album: wider 2-col grid */
       #albumView {
-        grid-template-columns: 1fr 420px;
         column-gap: 28px;
         padding-left: 36px;
         padding-right: 36px;
         padding-top: 28px;
+      }
+      #albumView .album-scroll-panel {
+        grid-template-columns: 1fr 420px;
+        column-gap: 28px;
       }
 
       .bookview { width: min(500px, 92%); }
@@ -2292,6 +2314,7 @@
 
     <!-- ══════════ ALBUM VIEW ══════════ -->
     <section class="view" id="albumView" role="main" aria-label="Album Book">
+      <div class="album-scroll-panel">
 
       <!-- Book -->
       <div class="card book-card" id="bookSection">
@@ -2363,6 +2386,8 @@
         <div class="saved-list" id="savedPages">
           <div class="empty-state">Saved album pages will appear here.</div>
         </div>
+      </div>
+
       </div>
 
     </section>
@@ -3486,18 +3511,23 @@
       stickerWrap.append(btn);
     });
 
-    function liveUpdate() {
+    function liveUpdate(event) {
       if (!activeId) return;
       state.captions[activeId] = state.captions[activeId] || defaultCaption();
+      if (event?.target === colorPick && !captionText.value.trim()) {
+        captionText.value = 'Caption';
+      }
       state.captions[activeId].text  = captionText.value;
       state.captions[activeId].font  = fontSel.value;
       state.captions[activeId].color = colorPick.value;
       persist();
       renderPreview();
+      renderCaptionDesigner();
     }
     captionText.addEventListener('input', liveUpdate);
     fontSel.addEventListener('change', liveUpdate);
     colorPick.addEventListener('input', liveUpdate);
+    colorPick.addEventListener('change', liveUpdate);
 
     window.openPhotoEditSheet = function(photoId, slotIndex) {
       const photo = state.photos.find(p => p.id === photoId);
