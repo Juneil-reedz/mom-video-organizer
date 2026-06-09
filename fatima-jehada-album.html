@@ -1468,6 +1468,49 @@
       font-weight: 800;
     }
 
+    .album-tile-actions {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .album-tile-btn {
+      flex: 1;
+      border: 1px solid rgba(106,64,31,.22);
+      border-radius: 7px;
+      background: rgba(255,255,255,.55);
+      color: var(--brown);
+      font-size: .7rem;
+      font-weight: 700;
+      padding: 3px 4px;
+      cursor: pointer;
+      line-height: 1;
+      transition: background .15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .album-tile-btn:hover { background: rgba(255,255,255,.85); }
+    .album-tile-btn.del { color: #c0392b; border-color: rgba(192,57,43,.28); }
+    .album-tile-btn.del:hover { background: rgba(255,220,220,.75); }
+
+    .album-tile-rename-input {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      border: 1.5px solid rgba(217,147,0,.6);
+      border-radius: 7px;
+      background: rgba(255,255,255,.85);
+      color: var(--brown);
+      font-family: var(--display);
+      font-size: .9rem;
+      padding: 4px 6px;
+      outline: none;
+      box-sizing: border-box;
+      margin-top: 4px;
+    }
+
     .bookview-scene {
       width: 100%;
       padding: clamp(22px, 5vw, 46px) clamp(18px, 6vw, 44px) clamp(28px, 5vw, 54px);
@@ -3490,8 +3533,20 @@
       button.dataset.albumId = item.id;
       button.innerHTML = `
         <span class="album-tile-title">${escapeHtml(item.title)}</span>
-        <span class="album-tile-meta">${albumPageText((item.pages || []).length)}</span>`;
+        <span class="album-tile-meta">${albumPageText((item.pages || []).length)}</span>
+        <div class="album-tile-actions">
+          <button class="album-tile-btn ren" type="button" title="Rename">✏️</button>
+          <button class="album-tile-btn del" type="button" title="Delete">🗑</button>
+        </div>`;
       button.addEventListener('click', () => selectAlbumBook(item.id));
+      button.querySelector('.ren').addEventListener('click', e => {
+        e.stopPropagation();
+        startRenameAlbum(item.id, button);
+      });
+      button.querySelector('.del').addEventListener('click', e => {
+        e.stopPropagation();
+        deleteAlbumBook(item.id);
+      });
       els.albumShelf.append(button);
     });
   }
@@ -3536,6 +3591,65 @@
     persist();
     render();
     showToast(`Created "${title}".`);
+  }
+
+  function deleteAlbumBook(id) {
+    const album = state.albums.find(a => a.id === id);
+    if (!album) return;
+    const pageCount = (album.pages || []).length;
+    const msg = pageCount > 0
+      ? `Delete "${album.title}" and its ${pageCount} page${pageCount > 1 ? 's' : ''}? This cannot be undone.`
+      : `Delete album "${album.title}"?`;
+    if (!confirm(msg)) return;
+    state.albums = state.albums.filter(a => a.id !== id);
+    if (state.activeAlbumId === id) {
+      const next = state.albums[0];
+      if (next) {
+        state.activeAlbumId = next.id;
+        state.pages = next.pages || [];
+      } else {
+        const fresh = makeAlbum('Fatima Album 1', []);
+        state.albums.push(fresh);
+        state.activeAlbumId = fresh.id;
+        state.pages = fresh.pages;
+      }
+      state.pageIndex = 0;
+      state.editingPageId = null;
+      state.bookOpen = false;
+    }
+    persist();
+    render();
+    showToast(`Deleted "${album.title}".`);
+  }
+
+  function startRenameAlbum(id, tileEl) {
+    const album = state.albums.find(a => a.id === id);
+    if (!album) return;
+    const titleEl = tileEl.querySelector('.album-tile-title');
+    const actionsEl = tileEl.querySelector('.album-tile-actions');
+    if (!titleEl) return;
+    titleEl.style.display = 'none';
+    actionsEl.style.display = 'none';
+    const input = document.createElement('input');
+    input.className = 'album-tile-rename-input';
+    input.value = album.title;
+    input.maxLength = 60;
+    tileEl.appendChild(input);
+    input.focus();
+    input.select();
+    function commit() {
+      const newTitle = input.value.trim() || album.title;
+      album.title = newTitle;
+      album.updatedAt = Date.now();
+      persist();
+      render();
+      showToast(`Renamed to "${newTitle}".`);
+    }
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); commit(); }
+      if (e.key === 'Escape') { input.remove(); titleEl.style.display = ''; actionsEl.style.display = ''; }
+    });
+    input.addEventListener('blur', commit);
   }
 
   function selectAlbumBook(id) {
