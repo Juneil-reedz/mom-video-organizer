@@ -1491,11 +1491,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      padding: 14px 18px;
+      gap: 12px;
+      padding: 10px 18px 12px;
       border-top: 1px solid var(--glass-border);
-      flex-wrap: wrap;
     }
+
+    /* Allow vertical page-scroll while still detecting horizontal swipes */
+    .bookview { touch-action: pan-y; }
 
     /* ─── Saved Pages ─── */
     .saved-list {
@@ -2319,15 +2321,8 @@
         </div>
 
         <div class="book-controls">
-          <button class="btn btn-secondary" id="prevPageBtn" type="button">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-            Prev
-          </button>
-          <span id="pageCounter" style="flex:1;text-align:center;font-size:.78rem;font-weight:700;color:var(--muted);">—</span>
-          <button class="btn btn-secondary" id="nextPageBtn" type="button">
-            Next
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
-          </button>
+          <span id="pageCounter" style="font-size:.75rem;font-weight:700;color:var(--muted);">—</span>
+          <span style="font-size:.65rem;color:var(--muted);opacity:.7">Swipe or tap corners to flip</span>
         </div>
       </div>
 
@@ -2466,8 +2461,6 @@
     exportPage: document.querySelector('#exportPageBtn'),
     clearSelection: document.querySelector('#clearSelectionBtn'),
     closeBook: document.querySelector('#closeBookBtn'),
-    prevPage: document.querySelector('#prevPageBtn'),
-    nextPage: document.querySelector('#nextPageBtn'),
     pageCounter: document.querySelector('#pageCounter'),
     previewTitle: document.querySelector('#previewTitle'),
     previewNote: document.querySelector('#previewNote'),
@@ -2677,13 +2670,41 @@
           sticker.style.setProperty('--sticker-y', `${caption.stickerY ?? 18}%`);
           slot.append(sticker);
         }
-        /* Tap filled slot → photo edit sheet */
+        /* Drag to pan · tap to edit */
         const _id = photo.id, _idx = i;
-        slot.addEventListener('click', e => {
-          if (!e.target.closest('.photo-caption, .photo-sticker')) {
-            openPhotoEditSheet(_id, _idx);
-          }
+        slot.style.touchAction = 'none'; /* capture all pointer movement */
+        let panStart = null, cropBase = null, didPan = false;
+
+        slot.addEventListener('pointerdown', e => {
+          if (e.target.closest('.photo-caption, .photo-sticker')) return;
+          panStart = { x: e.clientX, y: e.clientY };
+          cropBase = { ...(state.crops[_id] || { x: 50, y: 50, zoom: 1 }) };
+          didPan = false;
+          slot.setPointerCapture(e.pointerId);
         });
+
+        slot.addEventListener('pointermove', e => {
+          if (!panStart) return;
+          const dx = e.clientX - panStart.x;
+          const dy = e.clientY - panStart.y;
+          if (!didPan && Math.abs(dx) + Math.abs(dy) < 5) return;
+          didPan = true;
+          const W = slot.offsetWidth || 1, H = slot.offsetHeight || 1;
+          /* Invert direction: drag right → photo moves right → x decreases */
+          const nx = Math.max(0, Math.min(100, cropBase.x - (dx / W) * 90));
+          const ny = Math.max(0, Math.min(100, cropBase.y - (dy / H) * 90));
+          img.style.setProperty('--img-x', `${nx}%`);
+          img.style.setProperty('--img-y', `${ny}%`);
+          state.crops[_id] = { ...(state.crops[_id] || cropBase), x: nx, y: ny };
+        });
+
+        slot.addEventListener('pointerup', () => {
+          if (didPan) persist();
+          else if (panStart) openPhotoEditSheet(_id, _idx); /* it was a tap */
+          panStart = null; didPan = false;
+        });
+
+        slot.addEventListener('pointercancel', () => { panStart = null; didPan = false; });
       } else {
         /* Empty slot — tap to pick a photo from phone */
         slot.classList.add('empty-slot');
@@ -3210,8 +3231,6 @@
     render();
   });
   els.closeBook.addEventListener('click', closeBook);
-  els.prevPage.addEventListener('click', () => flipBookPage('prev'));
-  els.nextPage.addEventListener('click', () => flipBookPage('next'));
 
   /* Cover: tap or swipe opens the book */
   document.querySelector('#bookCover').addEventListener('click', openBook);
