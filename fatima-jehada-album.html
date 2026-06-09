@@ -1,0 +1,1204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fatima Jehada Album Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #39291f;
+      --muted: #846a5e;
+      --line: #f1d9a1;
+      --paper: #fffaf0;
+      --sun: #f8c21b;
+      --sun-deep: #d99300;
+      --pink: #f47ca8;
+      --pink-soft: #ffe1ec;
+      --cream: #fff5d5;
+      --brown: #6a401f;
+      --shadow: 0 22px 60px rgba(102, 64, 31, .15);
+      --body: "Nunito", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --display: "Playfair Display", Georgia, serif;
+      color-scheme: light;
+      font-family: var(--body);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 12%, rgba(248, 194, 27, .34), transparent 30%),
+        radial-gradient(circle at 90% 18%, rgba(244, 124, 168, .22), transparent 28%),
+        linear-gradient(135deg, #fffaf0, #ffe1ec 55%, #fff5d5);
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { border: 0; cursor: pointer; }
+    input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 18px clamp(16px, 3vw, 34px);
+      background: rgba(255, 250, 240, .82);
+      border-bottom: 1px solid rgba(217, 147, 0, .28);
+      backdrop-filter: blur(16px);
+    }
+
+    .topbar {
+      max-width: 1360px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .brand {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 68px 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .brand img {
+      width: 68px;
+      height: 68px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: white;
+      border: 1px solid rgba(217, 147, 0, .38);
+      box-shadow: 0 10px 28px rgba(244, 124, 168, .18);
+    }
+
+    h1, h2, h3 {
+      font-family: var(--display);
+      letter-spacing: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.6rem, 3vw, 2.7rem);
+      line-height: 1;
+      color: var(--brown);
+    }
+
+    .subtitle {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: .98rem;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .button {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 10px;
+      padding: 0 14px;
+      color: var(--brown);
+      background: linear-gradient(135deg, var(--sun), #ffd95d 54%, var(--pink));
+      box-shadow: 0 10px 22px rgba(217, 147, 0, .22);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .button.secondary {
+      background: rgba(255, 255, 255, .78);
+      border: 1px solid rgba(217, 147, 0, .34);
+      box-shadow: none;
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex: 0 0 auto;
+    }
+
+    main {
+      max-width: 1360px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 22px clamp(16px, 3vw, 34px) 34px;
+      display: grid;
+      grid-template-columns: minmax(290px, 340px) 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .side, .workspace {
+      display: grid;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .panel {
+      border-radius: 12px;
+      border: 1px solid rgba(217, 147, 0, .28);
+      background: rgba(255, 255, 255, .74);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .drop {
+      position: relative;
+      min-height: 188px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 22px;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(248, 194, 27, .28), transparent 34%),
+        radial-gradient(circle at 84% 28%, rgba(244, 124, 168, .2), transparent 30%),
+        rgba(255, 245, 213, .68);
+      border-style: dashed;
+    }
+
+    .drop::before {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border: 1px dashed rgba(217, 147, 0, .42);
+      border-radius: 10px;
+      pointer-events: none;
+    }
+
+    .drop strong {
+      display: block;
+      font-family: var(--display);
+      font-size: 1.35rem;
+      color: var(--brown);
+      margin-bottom: 5px;
+    }
+
+    .drop span {
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .controls {
+      padding: 14px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-height: 42px;
+      border-radius: 10px;
+      border: 1px solid rgba(217, 147, 0, .28);
+      background: rgba(255, 255, 255, .88);
+      color: var(--ink);
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--pink);
+      box-shadow: 0 0 0 3px rgba(244, 124, 168, .16);
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    .photo-grid {
+      padding: 12px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      max-height: 420px;
+      overflow: auto;
+    }
+
+    .photo-tile {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      overflow: hidden;
+      background: var(--cream);
+      position: relative;
+    }
+
+    .photo-tile.selected {
+      border-color: var(--pink);
+      box-shadow: 0 0 0 3px rgba(244, 124, 168, .16);
+    }
+
+    .photo-tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .photo-tile span {
+      position: absolute;
+      top: 7px;
+      right: 7px;
+      min-width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      color: var(--brown);
+      background: var(--sun);
+      font-weight: 900;
+      font-size: .8rem;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, .14);
+    }
+
+    .album-stage {
+      display: grid;
+      gap: 14px;
+    }
+
+    .stage-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 16px;
+    }
+
+    .stage-head h2 {
+      margin: 0;
+      color: var(--brown);
+      font-size: clamp(1.35rem, 2.6vw, 2rem);
+    }
+
+    .page-wrap {
+      display: grid;
+      place-items: center;
+      padding: clamp(14px, 3vw, 26px);
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, .54), rgba(255, 225, 236, .58)),
+        rgba(255, 255, 255, .44);
+    }
+
+    .album-page {
+      width: min(860px, 100%);
+      aspect-ratio: 1.18 / 1;
+      border-radius: 16px;
+      padding: clamp(18px, 3vw, 32px);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 24px 70px rgba(106, 64, 31, .18);
+      border: 1px solid rgba(217, 147, 0, .34);
+      background:
+        radial-gradient(circle at 12% 14%, rgba(248, 194, 27, .26), transparent 26%),
+        radial-gradient(circle at 90% 18%, rgba(244, 124, 168, .18), transparent 28%),
+        var(--page-bg, #fffaf0);
+    }
+
+    .album-page::before {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border: 1px dashed rgba(217, 147, 0, .32);
+      border-radius: 12px;
+      pointer-events: none;
+    }
+
+    .page-title {
+      margin: 0;
+      text-align: center;
+      font-size: clamp(1.35rem, 3vw, 2.4rem);
+      line-height: 1;
+      color: var(--brown);
+      z-index: 1;
+    }
+
+    .page-subtitle {
+      margin: -6px 0 0;
+      text-align: center;
+      color: var(--muted);
+      font-weight: 800;
+      z-index: 1;
+    }
+
+    .photo-layout {
+      z-index: 1;
+      display: grid;
+      gap: var(--page-gap, 14px);
+      min-height: 0;
+    }
+
+    .layout-1 { grid-template-columns: 1fr; }
+    .layout-2 { grid-template-columns: repeat(2, 1fr); }
+    .layout-4 { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); }
+    .layout-6 { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); }
+
+    .template-magazine.layout-4 {
+      grid-template-columns: 1.25fr .75fr;
+      grid-template-rows: repeat(3, 1fr);
+    }
+
+    .template-magazine.layout-4 .slot:first-child { grid-row: span 3; }
+    .template-magazine.layout-6 .slot:first-child { grid-column: span 2; }
+
+    .template-scrapbook .slot:nth-child(odd) { transform: rotate(-1.4deg); }
+    .template-scrapbook .slot:nth-child(even) { transform: rotate(1.2deg); }
+
+    .template-filmstrip {
+      background:
+        linear-gradient(90deg, rgba(57, 41, 31, .14) 0 8px, transparent 8px calc(100% - 8px), rgba(57, 41, 31, .14) calc(100% - 8px)),
+        transparent;
+      padding: 10px 20px;
+      border-radius: 18px;
+    }
+
+    .slot {
+      position: relative;
+      border-radius: var(--page-radius, 16px);
+      overflow: hidden;
+      background: rgba(255, 255, 255, .62);
+      border: var(--frame-width, 8px) solid var(--frame-color, #fff);
+      border-style: var(--frame-style, solid);
+      box-shadow: 0 12px 30px rgba(106, 64, 31, .12);
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-weight: 900;
+      min-height: 0;
+    }
+
+    .slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .photo-caption {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      min-height: 34px;
+      display: grid;
+      place-items: center;
+      padding: 6px 9px;
+      border-radius: 10px;
+      background: rgba(255, 250, 240, .82);
+      color: var(--caption-color, #6a401f);
+      font-family: var(--caption-font, var(--body));
+      font-size: clamp(.82rem, 1.4vw, 1.05rem);
+      font-weight: 900;
+      text-align: center;
+      line-height: 1.1;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, .55);
+      overflow-wrap: anywhere;
+    }
+
+    .caption-designer {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .caption-row {
+      display: grid;
+      grid-template-columns: 1fr .78fr 70px;
+      gap: 8px;
+      align-items: end;
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .68);
+      border: 1px solid rgba(217, 147, 0, .24);
+    }
+
+    .caption-row strong {
+      grid-column: 1 / -1;
+      color: var(--brown);
+      font-size: .9rem;
+    }
+
+    .caption-row input[type="color"] {
+      padding: 4px;
+      min-height: 42px;
+    }
+
+    .page-note {
+      z-index: 1;
+      margin: 0;
+      text-align: center;
+      color: var(--brown);
+      font-weight: 900;
+    }
+
+    .sticker {
+      position: absolute;
+      font-size: clamp(1.5rem, 3vw, 2.5rem);
+      filter: drop-shadow(0 8px 12px rgba(106, 64, 31, .14));
+      pointer-events: none;
+    }
+
+    .sticker.a { left: 24px; bottom: 24px; }
+    .sticker.b { right: 24px; top: 24px; }
+
+    .saved-pages {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      max-height: 360px;
+      overflow: auto;
+    }
+
+    .saved-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      min-height: 58px;
+      border-radius: 10px;
+      padding: 10px;
+      background: rgba(255, 255, 255, .74);
+      border: 1px solid rgba(217, 147, 0, .24);
+    }
+
+    .saved-card strong {
+      display: block;
+      color: var(--brown);
+      overflow-wrap: anywhere;
+    }
+
+    .saved-card span {
+      color: var(--muted);
+      font-size: .84rem;
+    }
+
+    .mini-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .mini {
+      min-height: 34px;
+      border-radius: 8px;
+      padding: 0 10px;
+      color: var(--brown);
+      background: var(--pink-soft);
+      font-weight: 900;
+    }
+
+    .empty {
+      padding: 18px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    canvas { display: none; }
+
+    @media (max-width: 980px) {
+      main, .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .top-actions {
+        justify-content: stretch;
+      }
+
+      .button {
+        flex: 1;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .brand {
+        grid-template-columns: 58px 1fr;
+      }
+
+      .brand img {
+        width: 58px;
+        height: 58px;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .album-page {
+        aspect-ratio: .78 / 1;
+      }
+
+      .layout-6 {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+      }
+
+      .caption-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="topbar">
+        <div class="brand">
+          <img src="fatima-jehada-logo.png" alt="Fatima Jehada album logo">
+          <div>
+            <h1>Fatima Jehada Album Studio</h1>
+            <p class="subtitle">A sunflower-yellow and pink photo album builder for maarte memory pages.</p>
+          </div>
+        </div>
+        <div class="top-actions">
+          <label class="button" for="photoInput">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            Add Photos
+          </label>
+          <input id="photoInput" type="file" accept="image/*" multiple>
+          <button class="button secondary" id="exportPageBtn" type="button">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+            Save as Image
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <aside class="side">
+        <section class="panel drop" id="dropzone">
+          <div>
+            <strong>Drop Her Pictures</strong>
+            <span>Add photos, select 4, then save a beautiful album page.</span>
+          </div>
+        </section>
+
+        <section class="panel controls">
+          <label class="full">
+            Page Title
+            <input id="pageTitle" value="Fatima's Sunflower Album">
+          </label>
+          <label>
+            Photos/Page
+            <select id="layoutCount">
+              <option value="4">4 Photos</option>
+              <option value="1">1 Photo</option>
+              <option value="2">2 Photos</option>
+              <option value="6">6 Photos</option>
+            </select>
+          </label>
+          <label>
+            Page Style
+            <select id="pageStyle">
+              <option value="sun">Sunflower Cream</option>
+              <option value="pink">Pink Maarte</option>
+              <option value="clean">Clean White</option>
+              <option value="gold">Golden Glow</option>
+            </select>
+          </label>
+          <label>
+            Template
+            <select id="templateStyle">
+              <option value="classic">Classic Grid</option>
+              <option value="magazine">Magazine Feature</option>
+              <option value="scrapbook">Tilted Scrapbook</option>
+              <option value="filmstrip">Filmstrip Cute</option>
+            </select>
+          </label>
+          <label>
+            Frame
+            <select id="frameStyle">
+              <option value="white">White Polaroid</option>
+              <option value="pink">Pink Frame</option>
+              <option value="yellow">Yellow Frame</option>
+              <option value="dotted">Dotted Maarte</option>
+              <option value="lace">Soft Lace</option>
+              <option value="shadow">Soft Shadow</option>
+              <option value="none">No Frame</option>
+            </select>
+          </label>
+          <label>
+            Sticker
+            <select id="stickerStyle">
+              <option value="sunflower">Sunflowers</option>
+              <option value="hearts">Hearts</option>
+              <option value="sparkle">Sparkles</option>
+              <option value="none">None</option>
+            </select>
+          </label>
+          <label class="full">
+            Page Note
+            <input id="pageNote" value="Bright, pretty, and unforgettable.">
+          </label>
+          <button class="button full" id="savePageBtn" type="button">Save Album Page</button>
+        </section>
+
+        <section class="panel">
+          <div class="stage-head">
+            <h2>Photo Captions</h2>
+          </div>
+          <div class="caption-designer" id="captionDesigner"></div>
+        </section>
+
+        <section class="panel">
+          <div class="stage-head">
+            <h2>Saved Pages</h2>
+          </div>
+          <div class="saved-pages" id="savedPages"></div>
+        </section>
+      </aside>
+
+      <section class="workspace">
+        <section class="panel">
+          <div class="stage-head">
+            <div>
+              <h2>Page Preview</h2>
+              <p class="subtitle">Tap photos below to choose what appears on this album page.</p>
+            </div>
+            <button class="button secondary" id="clearSelectionBtn" type="button">Clear Picks</button>
+          </div>
+          <div class="page-wrap">
+            <article class="album-page" id="albumPage">
+              <h2 class="page-title" id="previewTitle">Fatima's Sunflower Album</h2>
+              <p class="page-subtitle">Fatima Jehada Asaad-Noor</p>
+              <div class="photo-layout layout-4" id="photoLayout"></div>
+              <p class="page-note" id="previewNote">Bright, pretty, and unforgettable.</p>
+              <span class="sticker a" id="stickerA">🌻</span>
+              <span class="sticker b" id="stickerB">🌸</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="stage-head">
+            <div>
+              <h2>Photo Library</h2>
+              <p class="subtitle">Selected photos are numbered in the order they appear on the page.</p>
+            </div>
+          </div>
+          <div class="photo-grid" id="photoGrid"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <canvas id="exportCanvas"></canvas>
+
+  <script>
+    const state = {
+      photos: JSON.parse(localStorage.getItem('fatimaAlbumPhotos') || '[]'),
+      pages: JSON.parse(localStorage.getItem('fatimaAlbumPages') || '[]'),
+      captions: JSON.parse(localStorage.getItem('fatimaAlbumCaptions') || '{}'),
+      selected: []
+    };
+
+    const els = {
+      input: document.querySelector('#photoInput'),
+      dropzone: document.querySelector('#dropzone'),
+      photoGrid: document.querySelector('#photoGrid'),
+      savedPages: document.querySelector('#savedPages'),
+      pageTitle: document.querySelector('#pageTitle'),
+      layoutCount: document.querySelector('#layoutCount'),
+      pageStyle: document.querySelector('#pageStyle'),
+      templateStyle: document.querySelector('#templateStyle'),
+      frameStyle: document.querySelector('#frameStyle'),
+      stickerStyle: document.querySelector('#stickerStyle'),
+      pageNote: document.querySelector('#pageNote'),
+      captionDesigner: document.querySelector('#captionDesigner'),
+      savePage: document.querySelector('#savePageBtn'),
+      exportPage: document.querySelector('#exportPageBtn'),
+      clearSelection: document.querySelector('#clearSelectionBtn'),
+      previewTitle: document.querySelector('#previewTitle'),
+      previewNote: document.querySelector('#previewNote'),
+      albumPage: document.querySelector('#albumPage'),
+      photoLayout: document.querySelector('#photoLayout'),
+      stickerA: document.querySelector('#stickerA'),
+      stickerB: document.querySelector('#stickerB'),
+      canvas: document.querySelector('#exportCanvas')
+    };
+
+    function persist() {
+      localStorage.setItem('fatimaAlbumPhotos', JSON.stringify(state.photos));
+      localStorage.setItem('fatimaAlbumPages', JSON.stringify(state.pages));
+      localStorage.setItem('fatimaAlbumCaptions', JSON.stringify(state.captions));
+    }
+
+    function compressImage(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const max = 1400;
+            const scale = Math.min(1, max / Math.max(img.width, img.height));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', .86));
+          };
+          img.onerror = reject;
+          img.src = reader.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function addPhotos(files) {
+      const images = Array.from(files).filter(file => file.type.startsWith('image/'));
+      for (const file of images) {
+        const data = await compressImage(file);
+        state.photos.unshift({
+          id: crypto.randomUUID(),
+          name: file.name,
+          data,
+          createdAt: Date.now()
+        });
+      }
+      persist();
+      render();
+    }
+
+    function selectedLimit() {
+      return Number(els.layoutCount.value);
+    }
+
+    function togglePhoto(id) {
+      const index = state.selected.indexOf(id);
+      if (index >= 0) state.selected.splice(index, 1);
+      else {
+        if (state.selected.length >= selectedLimit()) state.selected.shift();
+        state.selected.push(id);
+      }
+      render();
+    }
+
+    function pageSettings() {
+      return {
+        title: els.pageTitle.value.trim() || 'Fatima Album Page',
+        note: els.pageNote.value.trim(),
+        layout: els.layoutCount.value,
+        style: els.pageStyle.value,
+        template: els.templateStyle.value,
+        frame: els.frameStyle.value,
+        sticker: els.stickerStyle.value,
+        captions: captionSettings(),
+        selected: [...state.selected]
+      };
+    }
+
+    function captionSettings() {
+      const settings = {};
+      state.selected.forEach(id => {
+        settings[id] = state.captions[id] || defaultCaption();
+      });
+      return settings;
+    }
+
+    function defaultCaption() {
+      return { text: '', font: 'Nunito', color: '#6a401f' };
+    }
+
+    function applyPageStyle(settings) {
+      const bg = {
+        sun: '#fffaf0',
+        pink: '#ffe1ec',
+        clean: '#ffffff',
+        gold: '#fff5d5'
+      }[settings.style];
+      const frame = {
+        white: ['#ffffff', '8px', 'solid'],
+        pink: ['#ffd0df', '8px', 'solid'],
+        yellow: ['#ffd95d', '8px', 'solid'],
+        dotted: ['#f47ca8', '8px', 'dotted'],
+        lace: ['#fff5d5', '10px', 'double'],
+        shadow: ['#ffffff', '6px', 'solid'],
+        none: ['transparent', '0px', 'solid']
+      }[settings.frame];
+      const stickers = {
+        sunflower: ['🌻', '🌸'],
+        hearts: ['💛', '💗'],
+        sparkle: ['✨', '✦'],
+        none: ['', '']
+      }[settings.sticker];
+      els.albumPage.style.setProperty('--page-bg', bg);
+      els.albumPage.style.setProperty('--frame-color', frame[0]);
+      els.albumPage.style.setProperty('--frame-width', frame[1]);
+      els.albumPage.style.setProperty('--frame-style', frame[2]);
+      els.previewTitle.textContent = settings.title;
+      els.previewNote.textContent = settings.note;
+      els.stickerA.textContent = stickers[0];
+      els.stickerB.textContent = stickers[1];
+    }
+
+    function renderPreview() {
+      const settings = pageSettings();
+      applyPageStyle(settings);
+      els.photoLayout.className = `photo-layout layout-${settings.layout} template-${settings.template || 'classic'}`;
+      const chosen = settings.selected.map(id => state.photos.find(photo => photo.id === id)).filter(Boolean);
+      const count = Number(settings.layout);
+      els.photoLayout.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        if (chosen[i]) {
+          const img = document.createElement('img');
+          img.src = chosen[i].data;
+          img.alt = chosen[i].name;
+          slot.append(img);
+          const caption = settings.captions[chosen[i].id] || defaultCaption();
+          if (caption.text) {
+            const cap = document.createElement('div');
+            cap.className = 'photo-caption';
+            cap.textContent = caption.text;
+            cap.style.setProperty('--caption-color', caption.color);
+            cap.style.setProperty('--caption-font', fontFamily(caption.font));
+            slot.append(cap);
+          }
+        } else {
+          slot.textContent = `Photo ${i + 1}`;
+        }
+        els.photoLayout.append(slot);
+      }
+    }
+
+    function fontFamily(font) {
+      return {
+        Nunito: 'var(--body)',
+        Playfair: 'var(--display)',
+        Cursive: '"Brush Script MT", "Segoe Script", cursive',
+        Cute: '"Comic Sans MS", "Trebuchet MS", cursive',
+        Bold: 'Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif'
+      }[font] || 'var(--body)';
+    }
+
+    function renderCaptionDesigner() {
+      if (!state.selected.length) {
+        els.captionDesigner.innerHTML = '<div class="empty">Select photos to write captions for each one.</div>';
+        return;
+      }
+      els.captionDesigner.innerHTML = '';
+      state.selected.forEach((id, index) => {
+        const photo = state.photos.find(item => item.id === id);
+        if (!photo) return;
+        const caption = state.captions[id] || defaultCaption();
+        const row = document.createElement('div');
+        row.className = 'caption-row';
+        row.innerHTML = `
+          <strong>Photo ${index + 1}: ${escapeHtml(photo.name)}</strong>
+          <label>Words<input data-field="text" value="${escapeHtml(caption.text)}" placeholder="Write something cute"></label>
+          <label>Font<select data-field="font">
+            <option>Nunito</option>
+            <option>Playfair</option>
+            <option>Cursive</option>
+            <option>Cute</option>
+            <option>Bold</option>
+          </select></label>
+          <label>Color<input data-field="color" type="color" value="${caption.color || '#6a401f'}"></label>`;
+        row.querySelector('[data-field="font"]').value = caption.font || 'Nunito';
+        row.querySelectorAll('[data-field]').forEach(input => {
+          input.addEventListener('input', () => {
+            state.captions[id] = state.captions[id] || defaultCaption();
+            state.captions[id][input.dataset.field] = input.value;
+            persist();
+            renderPreview();
+          });
+        });
+        els.captionDesigner.append(row);
+      });
+    }
+
+    function renderPhotos() {
+      if (!state.photos.length) {
+        els.photoGrid.innerHTML = '<div class="empty">No photos yet. Add pictures to start building her album.</div>';
+        return;
+      }
+      els.photoGrid.innerHTML = '';
+      state.photos.forEach(photo => {
+        const button = document.createElement('button');
+        const order = state.selected.indexOf(photo.id);
+        button.className = `photo-tile ${order >= 0 ? 'selected' : ''}`;
+        button.type = 'button';
+        button.innerHTML = `<img src="${photo.data}" alt=""><span>${order >= 0 ? order + 1 : '+'}</span>`;
+        button.addEventListener('click', () => togglePhoto(photo.id));
+        els.photoGrid.append(button);
+      });
+    }
+
+    function renderSavedPages() {
+      if (!state.pages.length) {
+        els.savedPages.innerHTML = '<div class="empty">Saved album pages will appear here.</div>';
+        return;
+      }
+      els.savedPages.innerHTML = '';
+      state.pages.forEach(page => {
+        const card = document.createElement('div');
+        card.className = 'saved-card';
+        card.innerHTML = `
+          <div><strong>${escapeHtml(page.title)}</strong><span>${page.layout} photos • ${new Date(page.createdAt).toLocaleDateString()}</span></div>
+          <div class="mini-actions">
+            <button class="mini" type="button" data-action="load">Load</button>
+            <button class="mini" type="button" data-action="delete">Delete</button>
+          </div>`;
+        card.querySelector('[data-action="load"]').addEventListener('click', () => loadPage(page.id));
+        card.querySelector('[data-action="delete"]').addEventListener('click', () => deletePage(page.id));
+        els.savedPages.append(card);
+      });
+    }
+
+    function render() {
+      state.selected = state.selected.slice(0, selectedLimit());
+      renderPreview();
+      renderPhotos();
+      renderCaptionDesigner();
+      renderSavedPages();
+    }
+
+    function savePage() {
+      const settings = pageSettings();
+      state.pages.unshift({ id: crypto.randomUUID(), createdAt: Date.now(), ...settings });
+      persist();
+      renderSavedPages();
+    }
+
+    function loadPage(id) {
+      const page = state.pages.find(item => item.id === id);
+      if (!page) return;
+      els.pageTitle.value = page.title;
+      els.pageNote.value = page.note || '';
+      els.layoutCount.value = page.layout;
+      els.pageStyle.value = page.style;
+      els.templateStyle.value = page.template || 'classic';
+      els.frameStyle.value = page.frame;
+      els.stickerStyle.value = page.sticker;
+      Object.assign(state.captions, page.captions || {});
+      state.selected = [...page.selected];
+      render();
+    }
+
+    function deletePage(id) {
+      state.pages = state.pages.filter(page => page.id !== id);
+      persist();
+      renderSavedPages();
+    }
+
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[char]));
+    }
+
+    async function imageFromSrc(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    async function exportPageImage() {
+      const settings = pageSettings();
+      const chosen = settings.selected.map(id => state.photos.find(photo => photo.id === id)).filter(Boolean);
+      const canvas = els.canvas;
+      const ctx = canvas.getContext('2d');
+      canvas.width = 1400;
+      canvas.height = 1180;
+      const bg = getComputedStyle(els.albumPage).getPropertyValue('--page-bg').trim() || '#fffaf0';
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      drawSoftCircle(ctx, 180, 160, 260, 'rgba(248, 194, 27, .28)');
+      drawSoftCircle(ctx, 1230, 190, 270, 'rgba(244, 124, 168, .2)');
+      ctx.strokeStyle = 'rgba(217, 147, 0, .42)';
+      ctx.setLineDash([16, 12]);
+      roundRect(ctx, 48, 48, canvas.width - 96, canvas.height - 96, 28);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#6a401f';
+      ctx.textAlign = 'center';
+      ctx.font = '800 64px Georgia';
+      ctx.fillText(settings.title, canvas.width / 2, 120);
+      ctx.font = '800 28px Nunito, Arial';
+      ctx.fillStyle = '#846a5e';
+      ctx.fillText('Fatima Jehada Asaad-Noor', canvas.width / 2, 165);
+      await drawExportSlots(ctx, chosen, Number(settings.layout), settings.frame, settings.template, settings.captions);
+      ctx.font = '900 32px Nunito, Arial';
+      ctx.fillStyle = '#6a401f';
+      ctx.fillText(settings.note || '', canvas.width / 2, 1100);
+      ctx.font = '64px serif';
+      const sticker = { sunflower: ['🌻', '🌸'], hearts: ['💛', '💗'], sparkle: ['✨', '✦'], none: ['', ''] }[settings.sticker];
+      ctx.fillText(sticker[0], 90, 1088);
+      ctx.fillText(sticker[1], 1310, 105);
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = `${settings.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'fatima-album-page'}.png`;
+      link.click();
+    }
+
+    async function drawExportSlots(ctx, chosen, count, frameStyle, template, captions) {
+      const layouts = exportLayouts(count, template);
+      const frame = { white: '#ffffff', pink: '#ffd0df', yellow: '#ffd95d', dotted: '#f47ca8', lace: '#fff5d5', shadow: '#ffffff', none: 'transparent' }[frameStyle];
+      for (let i = 0; i < count; i++) {
+        const [x, y, w, h] = layouts[i];
+        const angle = template === 'scrapbook' ? (i % 2 ? 1.4 : -1.4) * Math.PI / 180 : 0;
+        ctx.save();
+        if (angle) {
+          ctx.translate(x + w / 2, y + h / 2);
+          ctx.rotate(angle);
+          ctx.translate(-(x + w / 2), -(y + h / 2));
+        }
+        if (frameStyle === 'shadow') {
+          ctx.shadowColor = 'rgba(106, 64, 31, .22)';
+          ctx.shadowBlur = 22;
+          ctx.shadowOffsetY = 12;
+        }
+        ctx.fillStyle = frame;
+        roundRect(ctx, x, y, w, h, 24);
+        ctx.fill();
+        ctx.shadowColor = 'transparent';
+        if (frameStyle === 'dotted' || frameStyle === 'lace') {
+          ctx.strokeStyle = frameStyle === 'dotted' ? '#f47ca8' : '#d99300';
+          ctx.lineWidth = frameStyle === 'dotted' ? 8 : 5;
+          ctx.setLineDash(frameStyle === 'dotted' ? [8, 14] : []);
+          roundRect(ctx, x + 8, y + 8, w - 16, h - 16, 20);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        const pad = frameStyle === 'none' ? 0 : 18;
+        if (chosen[i]) {
+          const img = await imageFromSrc(chosen[i].data);
+          drawCoverImage(ctx, img, x + pad, y + pad, w - pad * 2, h - pad * 2, 18);
+          const caption = captions[chosen[i].id] || defaultCaption();
+          if (caption.text) drawCaption(ctx, caption, x + pad + 16, y + h - 82, w - pad * 2 - 32, 46);
+        } else {
+          ctx.fillStyle = 'rgba(255,255,255,.62)';
+          roundRect(ctx, x + pad, y + pad, w - pad * 2, h - pad * 2, 18);
+          ctx.fill();
+          ctx.fillStyle = '#846a5e';
+          ctx.font = '900 30px Nunito, Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText(`Photo ${i + 1}`, x + w / 2, y + h / 2);
+        }
+        ctx.restore();
+      }
+    }
+
+    function exportLayouts(count, template) {
+      if (template === 'magazine' && count === 4) return [[95, 230, 720, 800], [850, 230, 450, 240], [850, 510, 450, 240], [850, 790, 450, 240]];
+      if (template === 'magazine' && count === 6) return [[95, 225, 800, 330], [930, 225, 360, 330], [95, 600, 390, 315], [505, 600, 390, 315], [915, 600, 390, 315], [505, 940, 390, 110]];
+      if (template === 'filmstrip') {
+        return {
+          1: [[190, 270, 1020, 650]],
+          2: [[110, 330, 560, 520], [730, 330, 560, 520]],
+          4: [[110, 300, 270, 520], [410, 300, 270, 520], [710, 300, 270, 520], [1010, 300, 270, 520]],
+          6: [[90, 275, 190, 520], [300, 275, 190, 520], [510, 275, 190, 520], [720, 275, 190, 520], [930, 275, 190, 520], [1140, 275, 190, 520]]
+        }[count];
+      }
+      return {
+        1: [[190, 220, 1020, 760]],
+        2: [[110, 260, 560, 660], [730, 260, 560, 660]],
+        4: [[110, 225, 560, 380], [730, 225, 560, 380], [110, 650, 560, 380], [730, 650, 560, 380]],
+        6: [[95, 235, 390, 315], [505, 235, 390, 315], [915, 235, 390, 315], [95, 590, 390, 315], [505, 590, 390, 315], [915, 590, 390, 315]]
+      }[count];
+    }
+
+    function drawCaption(ctx, caption, x, y, w, h) {
+      ctx.fillStyle = 'rgba(255, 250, 240, .86)';
+      roundRect(ctx, x, y, w, h, 16);
+      ctx.fill();
+      ctx.fillStyle = caption.color || '#6a401f';
+      const font = caption.font === 'Playfair' ? 'Georgia' : caption.font === 'Cursive' ? 'Segoe Script' : caption.font === 'Cute' ? 'Comic Sans MS' : caption.font === 'Bold' ? 'Impact' : 'Nunito, Arial';
+      ctx.font = `900 26px ${font}`;
+      ctx.textAlign = 'center';
+      ctx.fillText(caption.text, x + w / 2, y + 31, w - 24);
+    }
+
+    function drawCoverImage(ctx, img, x, y, w, h, radius) {
+      const ratio = Math.max(w / img.width, h / img.height);
+      const sw = w / ratio;
+      const sh = h / ratio;
+      const sx = (img.width - sw) / 2;
+      const sy = (img.height - sh) / 2;
+      ctx.save();
+      roundRect(ctx, x, y, w, h, radius);
+      ctx.clip();
+      ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+      ctx.restore();
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + w, y, x + w, y + h, radius);
+      ctx.arcTo(x + w, y + h, x, y + h, radius);
+      ctx.arcTo(x, y + h, x, y, radius);
+      ctx.arcTo(x, y, x + w, y, radius);
+      ctx.closePath();
+    }
+
+    function drawSoftCircle(ctx, x, y, r, color) {
+      const gradient = ctx.createRadialGradient(x, y, 0, x, y, r);
+      gradient.addColorStop(0, color);
+      gradient.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    els.input.addEventListener('change', event => addPhotos(event.target.files));
+    els.savePage.addEventListener('click', savePage);
+    els.exportPage.addEventListener('click', exportPageImage);
+    els.clearSelection.addEventListener('click', () => { state.selected = []; render(); });
+    [els.pageTitle, els.layoutCount, els.pageStyle, els.templateStyle, els.frameStyle, els.stickerStyle, els.pageNote].forEach(input => {
+      input.addEventListener('input', renderPreview);
+      input.addEventListener('change', render);
+    });
+    ['dragenter', 'dragover'].forEach(type => els.dropzone.addEventListener(type, event => event.preventDefault()));
+    els.dropzone.addEventListener('drop', event => {
+      event.preventDefault();
+      addPhotos(event.dataTransfer.files);
+    });
+
+    render();
+  </script>
+</body>
+</html>
