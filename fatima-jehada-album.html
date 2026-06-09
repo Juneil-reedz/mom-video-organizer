@@ -150,6 +150,7 @@
       overflow: hidden;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
+      flex-shrink: 0; /* must not compress inside flex-column .view */
     }
 
     .card-header {
@@ -325,7 +326,7 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
-      max-height: 300px;
+      max-height: 420px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: thin;
@@ -854,6 +855,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
+      flex-shrink: 0;
     }
 
     /* ─── Album View ─── */
