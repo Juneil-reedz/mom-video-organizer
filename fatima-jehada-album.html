@@ -1317,10 +1317,16 @@
 
     /* ── 3D Book ── */
     .book-card {
-      background: rgba(255,250,240,.82);
+      background:
+        radial-gradient(circle at 18% 12%, rgba(248,194,27,.20), transparent 30%),
+        radial-gradient(circle at 88% 18%, rgba(244,124,168,.18), transparent 28%),
+        rgba(255,250,240,.64);
       /* Must be visible: the default card overflow:hidden clips the 3D
          page-stack offsets, drop-shadows, and perspective transforms */
       overflow: visible;
+      border-color: transparent;
+      box-shadow: none;
+      border-radius: 0;
     }
 
     .album-scroll-panel {
@@ -1331,8 +1337,133 @@
       touch-action: pan-y;
     }
 
+    .album-book-shell {
+      width: min(100%, 980px);
+      margin-inline: auto;
+      min-height: min(74dvh, 760px);
+      display: grid;
+      align-content: center;
+      padding: 10px 0 20px;
+    }
+
+    .album-shelf {
+      width: min(100%, 980px);
+      margin-inline: auto;
+      display: grid;
+      gap: 10px;
+    }
+
+    .album-shelf-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      padding-inline: 4px;
+    }
+
+    .album-shelf-form input {
+      min-height: 42px;
+      border-radius: 12px;
+      border: 1px solid rgba(217,147,0,.26);
+      background: rgba(255,255,255,.78);
+      color: var(--brown);
+      font-weight: 800;
+      padding: 0 12px;
+      outline: none;
+    }
+
+    .album-shelf-form input:focus {
+      border-color: rgba(244,124,168,.58);
+      box-shadow: 0 0 0 3px rgba(244,124,168,.14);
+    }
+
+    .album-shelf-track {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x proximity;
+      padding: 4px 4px 12px;
+      touch-action: pan-x pan-y;
+    }
+
+    .album-tile {
+      position: relative;
+      flex: 0 0 128px;
+      min-height: 148px;
+      border: 0;
+      border-radius: 18px 28px 28px 18px;
+      background:
+        linear-gradient(100deg, rgba(106,64,31,.20) 0%, transparent 18%),
+        radial-gradient(circle at 48% 22%, rgba(248,194,27,.35), transparent 30%),
+        linear-gradient(135deg, #ffe1ec 0%, #fff5d5 62%, #ffd95d 100%);
+      box-shadow:
+        8px 0 0 rgba(255,250,240,.72),
+        12px 3px 0 rgba(217,147,0,.18),
+        0 16px 28px rgba(106,64,31,.16),
+        inset 10px 0 18px rgba(106,64,31,.16);
+      color: var(--brown);
+      cursor: pointer;
+      display: grid;
+      align-content: end;
+      gap: 5px;
+      padding: 18px 12px 14px 20px;
+      text-align: left;
+      scroll-snap-align: start;
+      transform-style: preserve-3d;
+      transition: transform .18s ease, box-shadow .18s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .album-tile::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      inset-block: 0;
+      width: 17px;
+      border-radius: 18px 4px 4px 18px;
+      background: linear-gradient(to right, rgba(72,38,18,.58), rgba(217,147,0,.18), transparent);
+    }
+
+    .album-tile::after {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border: 1px dashed rgba(217,147,0,.38);
+      border-radius: 12px 22px 22px 12px;
+      pointer-events: none;
+    }
+
+    .album-tile.active {
+      transform: translateY(-4px) rotateY(-7deg);
+      box-shadow:
+        8px 0 0 rgba(255,250,240,.78),
+        12px 3px 0 rgba(217,147,0,.24),
+        0 22px 34px rgba(244,124,168,.24),
+        inset 10px 0 18px rgba(106,64,31,.16);
+      outline: 2px solid rgba(244,124,168,.42);
+    }
+
+    .album-tile-title {
+      position: relative;
+      z-index: 1;
+      font-family: var(--display);
+      font-size: .98rem;
+      line-height: 1.05;
+      overflow-wrap: anywhere;
+    }
+
+    .album-tile-meta {
+      position: relative;
+      z-index: 1;
+      color: var(--muted);
+      font-size: .72rem;
+      font-weight: 800;
+    }
+
     .bookview-scene {
-      padding: 32px 20px 36px; /* extra room for drop-shadow & page-stack bleed */
+      padding: clamp(22px, 5vw, 46px) 20px clamp(28px, 5vw, 54px); /* extra room for drop-shadow & page-stack bleed */
       display: grid;
       place-items: center;
       position: relative;
@@ -1351,7 +1482,7 @@
 
     .book3d-cover-btn {
       position: relative;
-      width: min(200px, 56vw);
+      width: min(300px, 68vw);
       aspect-ratio: .72/1;
       display: flex;
       transform-style: preserve-3d;
@@ -1461,7 +1592,7 @@
 
     .bookview {
       position: relative;
-      width: min(340px, 88vw);
+      width: min(640px, 94vw);
       aspect-ratio: 1.1 / 1; /* matches live preview so saved pages look identical */
       contain: layout paint;
       transform-style: preserve-3d;
@@ -2137,8 +2268,9 @@
       .caption-row .form-grid { grid-template-columns: repeat(2, 1fr); }
       .view { padding-left: 28px; padding-right: 28px; }
       .photo-grid-inner { grid-template-columns: repeat(4, 1fr); }
-      .bookview { width: min(380px, 82vw); }
-      .book3d-cover-btn { width: min(260px, 58vw); }
+      .bookview { width: min(680px, 94vw); }
+      .book3d-cover-btn { width: min(330px, 62vw); }
+      .album-tile { flex-basis: 144px; min-height: 164px; }
     }
 
     /* ── 820px: Tablet landscape / small desktop ── */
@@ -2181,15 +2313,16 @@
       }
       #albumView .album-scroll-panel {
         display: grid;
-        grid-template-columns: minmax(0, 760px);
+        grid-template-columns: minmax(0, 1fr);
         justify-content: center;
         align-items: start;
+        width: 100%;
       }
       #bookSection { grid-column: 1; }
       #savedSection .saved-list { max-height: min(32dvh, 300px); }
 
-      .bookview { width: min(440px, 90%); }
-      .book3d-cover-btn { width: min(290px, 62%); }
+      .bookview { width: min(760px, 92vw); }
+      .book3d-cover-btn { width: min(360px, 52vw); }
     }
 
     /* ── 1100px: Desktop — sidebar always visible ── */
@@ -2268,11 +2401,11 @@
         padding-top: 28px;
       }
       #albumView .album-scroll-panel {
-        grid-template-columns: minmax(0, 860px);
+        grid-template-columns: minmax(0, 1fr);
       }
 
-      .bookview { width: min(500px, 92%); }
-      .book3d-cover-btn { width: min(320px, 68%); }
+      .bookview { width: min(860px, 78vw); }
+      .book3d-cover-btn { width: min(390px, 42vw); }
 
       /* Photo grid: 5 cols on desktop */
       .photo-grid-inner {
@@ -2562,14 +2695,22 @@
     <section class="view" id="albumView" role="main" aria-label="Album Book">
       <div class="album-scroll-panel">
 
+      <div class="album-shelf" aria-label="Album books">
+        <div class="album-shelf-form">
+          <input id="newAlbumTitle" type="text" placeholder="New book title">
+          <button class="btn btn-gold" id="addAlbumBtn" type="button">Add Book</button>
+        </div>
+        <div class="album-shelf-track" id="albumShelf" aria-label="Choose album book"></div>
+      </div>
+
       <!-- Book -->
       <div class="card book-card" id="bookSection">
+        <div class="album-book-shell">
         <div class="card-header">
           <div>
-            <div class="card-title">Album Book</div>
+            <div class="card-title" id="activeAlbumTitle">Album Book</div>
             <div class="card-subtitle" id="bookSubtitle">Tap the cover to open</div>
           </div>
-          <button class="btn btn-ghost" id="closeBookBtn" type="button" style="display:none">Close</button>
         </div>
 
         <div class="bookview-scene">
@@ -2581,7 +2722,7 @@
               <div class="book3d-cover-face">
                 <div class="cover-content">
                   <img src="fatima-jehada-logo.png" alt="Fatima Jehada album logo">
-                  <h2>Fatima Jehada</h2>
+                  <h2 id="bookCoverTitle">Fatima Jehada</h2>
                   <p>Tap to open</p>
                 </div>
               </div>
@@ -2622,6 +2763,8 @@
         <div class="book-page-actions">
           <button class="btn btn-mini load" id="editCurrentPageBtn" type="button">Edit This Page</button>
           <button class="btn btn-mini del" id="deleteCurrentPageBtn" type="button">Delete This Page</button>
+          <button class="btn btn-mini" id="closeBookBtn" type="button" style="display:none">Close</button>
+        </div>
         </div>
       </div>
 
@@ -2723,11 +2866,48 @@
 
 <script>
   /* ─── State ─── */
+  function readJSON(key, fallback) {
+    try {
+      const value = localStorage.getItem(key);
+      return value ? JSON.parse(value) : fallback;
+    } catch (error) {
+      console.warn(`Could not read ${key}:`, error);
+      return fallback;
+    }
+  }
+
+  function makeAlbum(title, pages = []) {
+    const id = crypto.randomUUID ? crypto.randomUUID() : `album-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    return { id, title: title || 'Fatima Album', pages, createdAt: Date.now(), updatedAt: Date.now() };
+  }
+
+  function normalizeAlbums(savedAlbums, legacyPages) {
+    const albums = Array.isArray(savedAlbums)
+      ? savedAlbums.map(album => ({
+          id: album.id || (crypto.randomUUID ? crypto.randomUUID() : `album-${Date.now()}-${Math.random().toString(16).slice(2)}`),
+          title: album.title || 'Fatima Album',
+          pages: Array.isArray(album.pages) ? album.pages : [],
+          createdAt: album.createdAt || Date.now(),
+          updatedAt: album.updatedAt || Date.now()
+        }))
+      : [];
+    if (!albums.length) albums.push(makeAlbum('Fatima Jehada Album', Array.isArray(legacyPages) ? legacyPages : []));
+    return albums;
+  }
+
+  const legacyPages = readJSON('fatimaAlbumPages', []);
+  const savedAlbums = readJSON('fatimaAlbumBooks', null);
+  const albums = normalizeAlbums(savedAlbums, legacyPages);
+  const savedActiveAlbumId = localStorage.getItem('fatimaActiveAlbumId');
+  const initialAlbum = albums.find(album => album.id === savedActiveAlbumId) || albums[0];
+
   const state = {
-    photos: JSON.parse(localStorage.getItem('fatimaAlbumPhotos') || '[]'),
-    pages: JSON.parse(localStorage.getItem('fatimaAlbumPages') || '[]'),
-    captions: JSON.parse(localStorage.getItem('fatimaAlbumCaptions') || '{}'),
-    crops: JSON.parse(localStorage.getItem('fatimaAlbumCrops') || '{}'),
+    photos: readJSON('fatimaAlbumPhotos', []),
+    albums,
+    activeAlbumId: initialAlbum.id,
+    pages: initialAlbum.pages,
+    captions: readJSON('fatimaAlbumCaptions', {}),
+    crops: readJSON('fatimaAlbumCrops', {}),
     selected: [],
     editingPageId: null,
     bookOpen: false,
@@ -2751,6 +2931,11 @@
     exportPage: document.querySelector('#exportPageBtn'),
     clearSelection: document.querySelector('#clearSelectionBtn'),
     closeBook: document.querySelector('#closeBookBtn'),
+    newAlbumTitle: document.querySelector('#newAlbumTitle'),
+    addAlbum: document.querySelector('#addAlbumBtn'),
+    albumShelf: document.querySelector('#albumShelf'),
+    activeAlbumTitle: document.querySelector('#activeAlbumTitle'),
+    bookCoverTitle: document.querySelector('#bookCoverTitle'),
     editCurrentPage: document.querySelector('#editCurrentPageBtn'),
     deleteCurrentPage: document.querySelector('#deleteCurrentPageBtn'),
     pageCounter: document.querySelector('#pageCounter'),
@@ -2779,9 +2964,31 @@
   });
 
   /* ─── Persist ─── */
+  function activeAlbum() {
+    let album = state.albums.find(item => item.id === state.activeAlbumId);
+    if (!album) {
+      album = state.albums[0] || makeAlbum('Fatima Jehada Album');
+      state.albums = [album, ...state.albums.filter(item => item.id !== album.id)];
+      state.activeAlbumId = album.id;
+    }
+    if (!Array.isArray(album.pages)) album.pages = [];
+    state.pages = album.pages;
+    return album;
+  }
+
   function persist() {
+    let album = state.albums.find(item => item.id === state.activeAlbumId);
+    if (!album) {
+      album = state.albums[0] || makeAlbum('Fatima Jehada Album');
+      state.albums = [album, ...state.albums.filter(item => item.id !== album.id)];
+      state.activeAlbumId = album.id;
+    }
+    album.pages = state.pages;
+    album.updatedAt = Date.now();
     localStorage.setItem('fatimaAlbumPhotos', JSON.stringify(state.photos));
     localStorage.setItem('fatimaAlbumPages', JSON.stringify(state.pages));
+    localStorage.setItem('fatimaAlbumBooks', JSON.stringify(state.albums));
+    localStorage.setItem('fatimaActiveAlbumId', state.activeAlbumId);
     localStorage.setItem('fatimaAlbumCaptions', JSON.stringify(state.captions));
     localStorage.setItem('fatimaAlbumCrops', JSON.stringify(state.crops));
   }
@@ -3195,8 +3402,33 @@
   function renderPhotos() { /* no-op */ }
 
   /* ─── Album book badge ─── */
+  function albumPageText(count) {
+    return `${count} page${count === 1 ? '' : 's'}`;
+  }
+
+  function renderAlbumShelf() {
+    const album = activeAlbum();
+    if (els.activeAlbumTitle) els.activeAlbumTitle.textContent = album.title;
+    if (els.bookCoverTitle) els.bookCoverTitle.textContent = album.title;
+    if (!els.albumShelf) return;
+
+    els.albumShelf.innerHTML = '';
+    state.albums.forEach(item => {
+      const button = document.createElement('button');
+      button.className = `album-tile${item.id === state.activeAlbumId ? ' active' : ''}`;
+      button.type = 'button';
+      button.dataset.albumId = item.id;
+      button.innerHTML = `
+        <span class="album-tile-title">${escapeHtml(item.title)}</span>
+        <span class="album-tile-meta">${albumPageText((item.pages || []).length)}</span>`;
+      button.addEventListener('click', () => selectAlbumBook(item.id));
+      els.albumShelf.append(button);
+    });
+  }
+
   function renderSavedPages() {
     if (typeof syncDrawerActive === 'function') syncDrawerActive();
+    activeAlbum();
     const badge = els.albumBadge;
     if (state.pages.length > 0) {
       badge.textContent = state.pages.length;
@@ -3216,8 +3448,39 @@
     renderPreview();
     renderPhotos();
     renderCaptionDesigner();
+    renderAlbumShelf();
     renderSavedPages();
     renderBook();
+  }
+
+  function addAlbumBook() {
+    const title = els.newAlbumTitle?.value.trim() || `Fatima Album ${state.albums.length + 1}`;
+    const album = makeAlbum(title, []);
+    state.albums.unshift(album);
+    state.activeAlbumId = album.id;
+    state.pages = album.pages;
+    state.pageIndex = 0;
+    state.editingPageId = null;
+    state.bookOpen = false;
+    if (els.newAlbumTitle) els.newAlbumTitle.value = '';
+    persist();
+    render();
+    showToast(`Created "${title}".`);
+  }
+
+  function selectAlbumBook(id) {
+    if (id === state.activeAlbumId) return;
+    const album = state.albums.find(item => item.id === id);
+    if (!album) return;
+    state.activeAlbumId = id;
+    state.pages = album.pages || [];
+    album.pages = state.pages;
+    state.pageIndex = 0;
+    state.editingPageId = null;
+    state.bookOpen = false;
+    persist();
+    render();
+    showToast(`Opened "${album.title}".`);
   }
 
   /* ─── Page CRUD ─── */
@@ -3619,6 +3882,12 @@
   els.exportPage.addEventListener('click', exportPageImage);
   els.editCurrentPage?.addEventListener('click', editCurrentBookPage);
   els.deleteCurrentPage?.addEventListener('click', deleteCurrentBookPage);
+  els.addAlbum?.addEventListener('click', addAlbumBook);
+  els.newAlbumTitle?.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    addAlbumBook();
+  });
 
   const frontPage = document.querySelector('#frontPage');
   const frontCoverBtn = document.querySelector('#frontCoverBtn');
