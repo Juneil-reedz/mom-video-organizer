@@ -642,14 +642,19 @@
     /* ─── Album View ─── */
 
     /* ── 3D Book ── */
-    .book-card { background: rgba(255,250,240,.82); }
+    .book-card {
+      background: rgba(255,250,240,.82);
+      /* Must be visible: the default card overflow:hidden clips the 3D
+         page-stack offsets, drop-shadows, and perspective transforms */
+      overflow: visible;
+    }
 
     .bookview-scene {
-      padding: 24px 16px 20px;
+      padding: 32px 20px 36px; /* extra room for drop-shadow & page-stack bleed */
       display: grid;
       place-items: center;
-      min-height: 380px;
       position: relative;
+      /* no min-height — let the book's natural aspect-ratio size determine height */
     }
 
     /* ── Closed Cover ── */
@@ -762,7 +767,7 @@
 
     .bookview {
       position: relative;
-      width: min(300px, 82vw);
+      width: min(340px, 88vw); /* wider so book fills the card properly on phone */
       aspect-ratio: .72/1;
       transform-style: preserve-3d;
     }
