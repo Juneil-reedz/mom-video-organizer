@@ -1571,7 +1571,7 @@
       'twitter': '🐦 X / Twitter',
     };
 
-    function openScheduleDialog(video, schedId = null) {
+    async function openScheduleDialog(video, schedId = null) {
       els.schedVideoId.value = video.id;
       els.schedEditId.value = schedId || '';
       els.schedDialogTitle.textContent = schedId ? 'Edit Schedule' : 'Schedule Post';
