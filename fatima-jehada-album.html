@@ -1708,72 +1708,16 @@
       border-top: 1px solid var(--glass-border);
     }
 
+    .book-page-actions {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 18px 14px;
+      flex-wrap: wrap;
+    }
+
     /* Allow vertical page-scroll while still detecting horizontal swipes */
     .bookview { touch-action: pan-y; }
-
-    /* ─── Saved Pages ─── */
-    .saved-list {
-      padding: 14px;
-      display: grid;
-      gap: 10px;
-      max-height: min(34dvh, 320px);
-      overflow-y: auto;
-      overscroll-behavior-y: contain;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-y;
-    }
-
-    .book-saved-panel {
-      border-top: 1px solid var(--glass-border);
-      background: linear-gradient(180deg, rgba(255,255,255,.24), rgba(255,245,213,.28));
-    }
-
-    .book-saved-panel .card-header {
-      padding-top: 14px;
-      padding-bottom: 6px;
-    }
-
-    .saved-card {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px;
-      border-radius: var(--radius-sm);
-      background: rgba(255,255,255,.72);
-      border: 1px solid rgba(217,147,0,.18);
-      box-shadow: 0 2px 8px rgba(106,64,31,.06);
-    }
-
-    .saved-card.editing {
-      border-color: rgba(244,124,168,.65);
-      background: linear-gradient(135deg, rgba(255,225,236,.9), rgba(255,245,213,.92));
-      box-shadow: 0 8px 20px rgba(244,124,168,.16);
-    }
-
-    .saved-card-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .saved-card-title {
-      font-weight: 800;
-      color: var(--brown);
-      font-size: .9rem;
-      overflow-wrap: anywhere;
-    }
-
-    .saved-card-meta {
-      font-size: .74rem;
-      color: var(--muted);
-      font-weight: 600;
-      margin-top: 2px;
-    }
-
-    .saved-card-actions {
-      display: flex;
-      gap: 7px;
-      flex-shrink: 0;
-    }
 
     .btn-mini {
       min-height: 36px;
@@ -2365,11 +2309,6 @@
         <span class="drawer-item-badge" id="drawerPageBadge" style="display:none">0</span>
       </button>
 
-      <button class="drawer-item" type="button" data-tab="albumView" data-anchor="savedSection">
-        <span class="drawer-item-icon">🗂</span>
-        <span class="drawer-item-label">Saved Pages</span>
-      </button>
-
     </div>
 
     <div class="drawer-footer">
@@ -2539,19 +2478,6 @@
           <button class="btn btn-ghost" id="closeBookBtn" type="button" style="display:none">Close</button>
         </div>
 
-        <!-- Saved Pages inside the book -->
-        <div class="book-saved-panel" id="savedSection">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Saved Pages</div>
-              <div class="card-subtitle">Pages stored inside this album book</div>
-            </div>
-          </div>
-          <div class="saved-list" id="savedPages">
-            <div class="empty-state">Saved album pages will appear here.</div>
-          </div>
-        </div>
-
         <div class="bookview-scene">
 
           <!-- CLOSED: 3D tilted cover -->
@@ -2598,6 +2524,10 @@
         <div class="book-controls">
           <span id="pageCounter" style="font-size:.75rem;font-weight:700;color:var(--muted);">—</span>
           <span style="font-size:.65rem;color:var(--muted);opacity:.7">Swipe or tap corners to flip</span>
+        </div>
+        <div class="book-page-actions">
+          <button class="btn btn-mini load" id="editCurrentPageBtn" type="button">Edit This Page</button>
+          <button class="btn btn-mini del" id="deleteCurrentPageBtn" type="button">Delete This Page</button>
         </div>
       </div>
 
@@ -2714,7 +2644,6 @@
   const els = {
     input: document.querySelector('#photoInput'),
     photoGrid: document.querySelector('#photoGrid'),
-    savedPages: document.querySelector('#savedPages'),
     pageTitle: document.querySelector('#pageTitle'),
     layoutCount: document.querySelector('#layoutCount'),
     pageStyle: document.querySelector('#pageStyle'),
@@ -2728,6 +2657,8 @@
     exportPage: document.querySelector('#exportPageBtn'),
     clearSelection: document.querySelector('#clearSelectionBtn'),
     closeBook: document.querySelector('#closeBookBtn'),
+    editCurrentPage: document.querySelector('#editCurrentPageBtn'),
+    deleteCurrentPage: document.querySelector('#deleteCurrentPageBtn'),
     pageCounter: document.querySelector('#pageCounter'),
     previewTitle: document.querySelector('#previewTitle'),
     previewNote: document.querySelector('#previewNote'),
@@ -3169,7 +3100,7 @@
   /* Photo library removed — photos are added directly via slot taps */
   function renderPhotos() { /* no-op */ }
 
-  /* ─── Saved pages ─── */
+  /* ─── Album book badge ─── */
   function renderSavedPages() {
     if (typeof syncDrawerActive === 'function') syncDrawerActive();
     const badge = els.albumBadge;
@@ -3179,29 +3110,6 @@
     } else {
       badge.classList.remove('visible');
     }
-
-    if (!state.pages.length) {
-      els.savedPages.innerHTML = '<div class="empty-state">Save album pages here. They appear in the book!</div>';
-      return;
-    }
-    els.savedPages.innerHTML = '';
-    state.pages.forEach(page => {
-      const card = document.createElement('div');
-      card.className = 'saved-card';
-      if (state.editingPageId === page.id) card.classList.add('editing');
-      card.innerHTML = `
-        <div class="saved-card-info">
-          <div class="saved-card-title">${escapeHtml(page.title)}</div>
-          <div class="saved-card-meta">${page.layout} photos &bull; ${new Date(page.updatedAt || page.createdAt).toLocaleDateString()}${state.editingPageId === page.id ? ' &bull; Editing now' : ''}</div>
-        </div>
-        <div class="saved-card-actions">
-          <button class="btn btn-mini load" type="button" data-action="load">Edit</button>
-          <button class="btn btn-mini del" type="button" data-action="delete">Del</button>
-        </div>`;
-      card.querySelector('[data-action="load"]').addEventListener('click', () => loadPage(page.id));
-      card.querySelector('[data-action="delete"]').addEventListener('click', () => deletePage(page.id));
-      els.savedPages.append(card);
-    });
   }
 
   /* ─── Render all ─── */
@@ -3238,8 +3146,8 @@
     state.pageIndex = 0;
     persist();
     render();
-    showToast('Saved to album. You can find it in Saved Pages.');
-    // Switch to album tab briefly to show the saved page
+    showToast('Saved to Album Book.');
+    // Switch to album tab briefly to show the saved page.
     document.querySelector('#tabAlbum').click();
   }
 
@@ -3268,6 +3176,31 @@
     state.pageIndex = Math.max(0, Math.min(state.pageIndex, bookPages().length - 1));
     persist();
     render();
+  }
+
+  function currentSavedPage() {
+    return state.pages[state.pageIndex] || null;
+  }
+
+  function editCurrentBookPage() {
+    const page = currentSavedPage();
+    if (!page) {
+      showToast('Save this draft first, then edit it from the book.');
+      return;
+    }
+    loadPage(page.id);
+  }
+
+  function deleteCurrentBookPage() {
+    const page = currentSavedPage();
+    if (!page) {
+      showToast('No saved page to delete yet.');
+      return;
+    }
+    const title = page.title || 'this page';
+    if (!confirm(`Delete "${title}" from the album book?`)) return;
+    deletePage(page.id);
+    showToast('Page deleted from album book.');
   }
 
   /* ─── Book ─── */
@@ -3303,7 +3236,12 @@
     const pages = bookPages();
     els.pageCounter.textContent = state.bookOpen && pages.length > 0
       ? `Page ${state.pageIndex + 1} of ${pages.length}`
-      : '—';
+      : state.pages.length
+        ? `${state.pages.length} album page${state.pages.length === 1 ? '' : 's'}`
+        : 'No album pages yet';
+    const hasSavedPage = !!currentSavedPage();
+    if (els.editCurrentPage) els.editCurrentPage.disabled = !hasSavedPage;
+    if (els.deleteCurrentPage) els.deleteCurrentPage.disabled = !hasSavedPage;
   }
 
   function fillPage(target, page) {
@@ -3584,6 +3522,8 @@
   els.input.addEventListener('change', e => addPhotos(e.target.files));
   els.savePage.addEventListener('click', savePage);
   els.exportPage.addEventListener('click', exportPageImage);
+  els.editCurrentPage?.addEventListener('click', editCurrentBookPage);
+  els.deleteCurrentPage?.addEventListener('click', deleteCurrentBookPage);
 
   const frontPage = document.querySelector('#frontPage');
   const frontCoverBtn = document.querySelector('#frontCoverBtn');
