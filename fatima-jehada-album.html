@@ -2603,8 +2603,8 @@
 
   /* ─── Apply page style ─── */
   function applyPageStyle(settings) {
-    const bg = { sun: '#fffaf0', pink: '#ffe1ec', clean: '#ffffff', gold: '#fff5d5' }[settings.style];
-    const frame = {
+    const bg = { sun: '#fffaf0', pink: '#ffe1ec', clean: '#ffffff', gold: '#fff5d5' }[settings.style] || '#fffaf0';
+    const frame = ({
       white: ['#ffffff', '7px', 'solid'],
       pink: ['#ffd0df', '7px', 'solid'],
       yellow: ['#ffd95d', '7px', 'solid'],
@@ -2612,8 +2612,8 @@
       lace: ['#fff5d5', '9px', 'double'],
       shadow: ['#ffffff', '5px', 'solid'],
       none: ['transparent', '0px', 'solid']
-    }[settings.frame];
-    const stickers = { sunflower: ['🌻', '🌸'], hearts: ['💛', '💗'], sparkle: ['✨', '✦'], none: ['', ''] }[settings.sticker];
+    }[settings.frame]) || ['#ffffff', '7px', 'solid'];
+    const stickers = ({ sunflower: ['🌻', '🌸'], hearts: ['💛', '💗'], sparkle: ['✨', '✦'], none: ['', ''] }[settings.sticker]) || ['', ''];
     els.albumPage.style.setProperty('--page-bg', bg);
     els.albumPage.style.setProperty('--frame-color', frame[0]);
     els.albumPage.style.setProperty('--frame-width', frame[1]);
@@ -2680,7 +2680,6 @@
           panStart = { x: e.clientX, y: e.clientY };
           cropBase = { ...(state.crops[_id] || { x: 50, y: 50, zoom: 1 }) };
           didPan = false;
-          slot.setPointerCapture(e.pointerId);
         });
 
         slot.addEventListener('pointermove', e => {
@@ -3485,20 +3484,21 @@
     };
 
     function closeSheet() {
-      /* Final save of text/font/color on close */
+      /* Always close first so a render error can't trap the user */
+      sheet.classList.remove('open');
+      backdrop.classList.remove('open');
+      document.body.style.overflow = '';
+      /* Then save & re-render */
       if (activeId) {
         state.captions[activeId] = state.captions[activeId] || defaultCaption();
         state.captions[activeId].text  = captionText.value;
         state.captions[activeId].font  = fontSel.value;
         state.captions[activeId].color = colorPick.value;
-        persist();
-        renderPreview();
-        renderCaptionDesigner();
+        try { persist(); } catch(e) { console.warn('persist failed:', e); }
+        try { renderPreview(); } catch(e) { console.warn('renderPreview failed:', e); }
+        try { renderCaptionDesigner(); } catch(e) { console.warn('renderCaptionDesigner failed:', e); }
       }
       activeId = null;
-      sheet.classList.remove('open');
-      backdrop.classList.remove('open');
-      document.body.style.overflow = '';
     }
 
     document.querySelector('#sheetDone').addEventListener('click', closeSheet);
