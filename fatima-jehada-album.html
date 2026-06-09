@@ -850,6 +850,36 @@
       grid-template-columns: 1fr;
     }
 
+    /* ─── Empty slot — tap to add photo ─── */
+    .slot.empty-slot {
+      cursor: pointer;
+      background: rgba(255,255,255,.35);
+      border: 2px dashed rgba(217,147,0,.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: background .15s, border-color .15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .slot.empty-slot:active { background: rgba(248,194,27,.14); border-color: var(--sun-deep); }
+    .slot.empty-slot::before {
+      content: "+";
+      font-size: 1.8rem;
+      font-weight: 300;
+      color: rgba(106,64,31,.45);
+      line-height: 1;
+    }
+    .slot.empty-slot::after {
+      content: "Add Photo";
+      font-size: .62rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: rgba(106,64,31,.45);
+    }
+
     /* ─── Tappable photo slot ─── */
     .slot.has-photo { cursor: pointer; }
     .slot.has-photo::after {
@@ -959,6 +989,21 @@
       gap: 10px;
     }
     .sheet-crop-btn:active { opacity: .8; }
+
+    .sheet-remove-btn {
+      background: rgba(220,50,50,.1);
+      border: 1.5px solid rgba(220,50,50,.25);
+      border-radius: var(--radius-sm);
+      color: #c0392b;
+      font-size: 1.1rem;
+      padding: 0 16px;
+      cursor: pointer;
+      min-height: 50px;
+      min-width: 52px;
+      display: grid;
+      place-items: center;
+    }
+    .sheet-remove-btn:active { opacity: .7; }
 
     .sheet-section-label {
       font-size: .68rem;
@@ -2018,9 +2063,9 @@
 
       <div class="drawer-group-label">Studio</div>
 
-      <button class="drawer-item" type="button" data-tab="studioView" data-anchor="uploadSection">
+      <button class="drawer-item" type="button" data-tab="studioView" data-anchor="previewSection">
         <span class="drawer-item-icon">📷</span>
-        <span class="drawer-item-label">Photo Library</span>
+        <span class="drawer-item-label">Live Preview</span>
       </button>
 
       <button class="drawer-item" type="button" data-tab="studioView" data-anchor="settingsSection">
@@ -2072,42 +2117,21 @@
     <!-- ══════════ STUDIO VIEW ══════════ -->
     <section class="view active" id="studioView" role="main">
 
-      <!-- 1. Upload + Photo Library combined card -->
-      <div class="card" id="uploadSection">
-        <label class="upload-zone" for="photoInput">
-          <div class="upload-icon-wrap">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-          </div>
-          <div class="upload-text">
-            <strong>Add Her Pictures</strong>
-            <span>Tap to choose photos — or drag &amp; drop</span>
-          </div>
-        </label>
-
-        <!-- Photo library grid directly below upload -->
-        <div class="photo-lib-wrap" id="photoLibWrap">
-          <div class="photo-lib-header">
-            <span class="photo-lib-label">Photo Library</span>
-            <span class="photo-lib-count" id="photoLibCount">0 photos</span>
-          </div>
-          <div class="photo-grid-inner" id="photoGrid">
-            <div class="photo-grid-empty">No photos yet — tap above to add!</div>
-          </div>
-          <div class="photo-lib-actions">
-            <button class="btn btn-ghost" id="clearSelectionBtn" type="button" style="flex:1">
-              <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              Clear Picks
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2. Page Preview — visible immediately so user sees live result -->
+      <!-- Live Preview — tap empty slots to add, tap photos to edit -->
       <div class="card" id="previewSection">
         <div class="card-header">
           <div>
             <div class="card-title">Live Preview</div>
-            <div class="card-subtitle">Tap photos above to add them here</div>
+            <div class="card-subtitle">Tap a slot to add · tap photo to edit</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn btn-ghost btn-sm" id="clearPageBtn" type="button" title="Clear all photos from this page">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+            <button class="btn btn-primary btn-sm" id="addAllPhotosBtn" type="button">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              Add Photos
+            </button>
           </div>
         </div>
         <div class="preview-wrap">
@@ -2373,9 +2397,14 @@
     <button class="sheet-done-btn" id="sheetDone" type="button">Done ✓</button>
   </div>
   <div class="sheet-body">
-    <button class="sheet-crop-btn" id="sheetCropBtn" type="button">
-      <span>✂️</span> Adjust Position &amp; Zoom
-    </button>
+    <div style="display:flex;gap:8px">
+      <button class="sheet-crop-btn" id="sheetCropBtn" type="button" style="flex:1">
+        <span>✂️</span> Adjust Position &amp; Zoom
+      </button>
+      <button class="sheet-remove-btn" id="sheetRemoveBtn" type="button" title="Remove photo from this slot">
+        🗑
+      </button>
+    </div>
     <div class="sheet-section-label">Caption</div>
     <input class="sheet-input" id="sheetCaptionText" type="text" placeholder="Write a caption..." maxlength="80" autocomplete="off">
     <div class="sheet-row">
@@ -2485,28 +2514,43 @@
     });
   }
 
+  /* Which slot index the next single-photo pick should fill; -1 = auto */
+  let activeSlotIndex = -1;
+
   async function addPhotos(files) {
     const images = Array.from(files).filter(f => f.type.startsWith('image/'));
+    const limit = selectedLimit();
     for (const file of images) {
       const data = await compressImage(file);
-      state.photos.unshift({ id: crypto.randomUUID(), name: file.name, data, createdAt: Date.now() });
+      const photo = { id: crypto.randomUUID(), name: file.name, data, createdAt: Date.now() };
+      state.photos.unshift(photo);
+      if (activeSlotIndex >= 0) {
+        /* Fill the specific tapped slot */
+        state.selected[activeSlotIndex] = photo.id;
+        activeSlotIndex = -1; /* consume */
+      } else {
+        /* Auto-fill: find the first empty index within limit */
+        let placed = false;
+        for (let i = 0; i < limit; i++) {
+          if (!state.selected[i]) { state.selected[i] = photo.id; placed = true; break; }
+        }
+        if (!placed) {
+          /* All slots full — replace the oldest (slot 0) and shift */
+          state.selected.shift();
+          if (state.selected.length < limit) state.selected.push(photo.id);
+          else state.selected[limit - 1] = photo.id;
+        }
+      }
     }
+    /* Restore multi-select for the "Add Photos" button */
+    els.input.setAttribute('multiple', '');
+    els.input.value = '';
     persist();
     render();
   }
 
-  /* ─── Photo selection ─── */
+  /* ─── Photo selection limit ─── */
   function selectedLimit() { return Number(els.layoutCount.value); }
-
-  function togglePhoto(id) {
-    const index = state.selected.indexOf(id);
-    if (index >= 0) state.selected.splice(index, 1);
-    else {
-      if (state.selected.length >= selectedLimit()) state.selected.shift();
-      state.selected.push(id);
-    }
-    render();
-  }
 
   /* ─── Page settings helpers ─── */
   function pageSettings() {
@@ -2578,28 +2622,30 @@
     const settings = pageSettings();
     applyPageStyle(settings);
     els.photoLayout.className = `photo-layout layout-${settings.layout} template-${settings.template || 'classic'}`;
-    const chosen = settings.selected.map(id => state.photos.find(p => p.id === id)).filter(Boolean);
     const count = Number(settings.layout);
     els.photoLayout.innerHTML = '';
     for (let i = 0; i < count; i++) {
       const slot = document.createElement('div');
       slot.className = 'slot';
-      if (chosen[i]) {
+      /* Direct index mapping — slot i gets state.selected[i] */
+      const photoId = state.selected[i];
+      const photo = photoId ? state.photos.find(p => p.id === photoId) : null;
+      if (photo) {
         slot.classList.add('has-photo');
         const img = document.createElement('img');
-        img.src = chosen[i].data;
-        img.alt = chosen[i].name;
-        const crop = state.crops[chosen[i].id] || { x: 50, y: 50, zoom: 1 };
+        img.src = photo.data;
+        img.alt = photo.name;
+        const crop = state.crops[photo.id] || { x: 50, y: 50, zoom: 1 };
         img.style.setProperty('--img-x', `${crop.x}%`);
         img.style.setProperty('--img-y', `${crop.y}%`);
         img.style.setProperty('--img-zoom', crop.zoom);
         slot.append(img);
-        const caption = settings.captions[chosen[i].id] || defaultCaption();
+        const caption = (state.captions[photo.id]) || defaultCaption();
         if (caption.text) {
           const cap = document.createElement('div');
           cap.className = 'photo-caption';
           cap.textContent = caption.text;
-          cap.dataset.photoId = chosen[i].id;
+          cap.dataset.photoId = photo.id;
           cap.dataset.dragType = 'caption';
           cap.style.setProperty('--caption-color', caption.color);
           cap.style.setProperty('--caption-font', fontFamily(caption.font));
@@ -2611,22 +2657,29 @@
           const sticker = document.createElement('div');
           sticker.className = 'photo-sticker';
           sticker.textContent = caption.sticker;
-          sticker.dataset.photoId = chosen[i].id;
+          sticker.dataset.photoId = photo.id;
           sticker.dataset.dragType = 'sticker';
           sticker.style.setProperty('--sticker-x', `${caption.stickerX ?? 84}%`);
           sticker.style.setProperty('--sticker-y', `${caption.stickerY ?? 18}%`);
           slot.append(sticker);
         }
-        /* Tap slot (not caption/sticker) → open photo edit sheet */
-        const _photoId = chosen[i].id;
-        const _slotIdx = i;
+        /* Tap filled slot → photo edit sheet */
+        const _id = photo.id, _idx = i;
         slot.addEventListener('click', e => {
           if (!e.target.closest('.photo-caption, .photo-sticker')) {
-            openPhotoEditSheet(_photoId, _slotIdx);
+            openPhotoEditSheet(_id, _idx);
           }
         });
       } else {
-        slot.textContent = `Photo ${i + 1}`;
+        /* Empty slot — tap to pick a photo from phone */
+        slot.classList.add('empty-slot');
+        const _slotIdx = i;
+        slot.addEventListener('click', () => {
+          activeSlotIndex = _slotIdx;
+          els.input.removeAttribute('multiple');
+          els.input.value = '';
+          els.input.click();
+        });
       }
       els.photoLayout.append(slot);
     }
@@ -2751,28 +2804,8 @@
     });
   }
 
-  /* ─── Photo library grid ─── */
-  function renderPhotos() {
-    const countEl = document.querySelector('#photoLibCount');
-    if (countEl) countEl.textContent = `${state.photos.length} photo${state.photos.length !== 1 ? 's' : ''}`;
-
-    if (!state.photos.length) {
-      els.photoGrid.innerHTML = '<div class="photo-grid-empty">No photos yet — tap above to add!</div>';
-      return;
-    }
-    els.photoGrid.innerHTML = '';
-    state.photos.forEach(photo => {
-      const tile = document.createElement('div');
-      const order = state.selected.indexOf(photo.id);
-      tile.className = `photo-tile ${order >= 0 ? 'selected' : ''}`;
-      const hasCrop = state.crops[photo.id] && (state.crops[photo.id].zoom !== 1 || state.crops[photo.id].x !== 50 || state.crops[photo.id].y !== 50);
-      tile.innerHTML = `<img src="${photo.data}" alt="" loading="lazy"><span class="badge">${order >= 0 ? order + 1 : '+'}</span><button class="crop-btn" type="button" title="Adjust photo">${hasCrop ? '✂️' : '✂️'} Adjust</button>`;
-      tile.querySelector('img').addEventListener('click', () => togglePhoto(photo.id));
-      tile.querySelector('.badge').addEventListener('click', () => togglePhoto(photo.id));
-      tile.querySelector('.crop-btn').addEventListener('click', e => { e.stopPropagation(); openCropModal(photo.id); });
-      els.photoGrid.append(tile);
-    });
-  }
+  /* Photo library removed — photos are added directly via slot taps */
+  function renderPhotos() { /* no-op */ }
 
   /* ─── Saved pages ─── */
   function renderSavedPages() {
@@ -2810,6 +2843,7 @@
 
   /* ─── Render all ─── */
   function render() {
+    /* Trim to slot limit; keep nulls for per-slot addressing but cap length */
     state.selected = state.selected.slice(0, selectedLimit());
     renderPreview();
     renderPhotos();
@@ -3115,7 +3149,21 @@
   els.input.addEventListener('change', e => addPhotos(e.target.files));
   els.savePage.addEventListener('click', savePage);
   els.exportPage.addEventListener('click', exportPageImage);
-  els.clearSelection.addEventListener('click', () => { state.selected = []; render(); });
+  els.clearSelection?.addEventListener('click', () => { state.selected = []; render(); });
+
+  /* Add Photos button in preview card header */
+  document.querySelector('#addAllPhotosBtn')?.addEventListener('click', () => {
+    activeSlotIndex = -1;
+    els.input.setAttribute('multiple', '');
+    els.input.value = '';
+    els.input.click();
+  });
+
+  /* Clear Page button */
+  document.querySelector('#clearPageBtn')?.addEventListener('click', () => {
+    state.selected = [];
+    render();
+  });
   els.closeBook.addEventListener('click', closeBook);
   els.prevPage.addEventListener('click', () => flipBookPage('prev'));
   els.nextPage.addEventListener('click', () => flipBookPage('next'));
@@ -3321,6 +3369,7 @@
 
     const STICKERS = ['','🌸','🌻','💗','💛','✨','✦','🦋','🌺','⭐','🌙','🎀','🩷','🫶','🌈','🍭'];
     let activeId = null;
+    let activeSlotIdx = -1;
 
     /* Build sticker button grid once */
     STICKERS.forEach(s => {
@@ -3357,6 +3406,7 @@
       const photo = state.photos.find(p => p.id === photoId);
       if (!photo) return;
       activeId = photoId;
+      activeSlotIdx = slotIndex;
       const cap = state.captions[photoId] || defaultCaption();
       sheetThumb.src    = photo.data;
       sheetTitle.textContent = `Photo ${slotIndex + 1}`;
@@ -3393,6 +3443,25 @@
     /* Crop button opens the crop modal on top of this sheet */
     document.querySelector('#sheetCropBtn').addEventListener('click', () => {
       if (activeId) openCropModal(activeId);
+    });
+
+    /* Remove photo from its slot */
+    document.querySelector('#sheetRemoveBtn').addEventListener('click', () => {
+      if (activeSlotIdx >= 0) {
+        state.selected[activeSlotIdx] = null;
+        /* Compact: remove trailing nulls */
+        while (state.selected.length && !state.selected[state.selected.length - 1]) {
+          state.selected.pop();
+        }
+        persist();
+      }
+      activeId = null;
+      activeSlotIdx = -1;
+      sheet.classList.remove('open');
+      backdrop.classList.remove('open');
+      document.body.style.overflow = '';
+      renderPreview();
+      renderCaptionDesigner();
     });
   })();
 
