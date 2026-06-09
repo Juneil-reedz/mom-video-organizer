@@ -2763,9 +2763,10 @@
           didPan = true;
           const W = slot.offsetWidth || 1, H = slot.offsetHeight || 1;
           /* Invert direction: drag right → photo moves right → x decreases */
-          const nx = Math.max(0, Math.min(100, cropBase.x - (dx / W) * 90));
-          const ny = Math.max(0, Math.min(100, cropBase.y - (dy / H) * 90));
-          const zoom = Math.max(1.08, Number(cropBase.zoom || 1));
+          const zoom = Math.max(1.45, Number(cropBase.zoom || 1));
+          const sensitivity = 125 / zoom;
+          const nx = Math.max(0, Math.min(100, cropBase.x - (dx / W) * sensitivity));
+          const ny = Math.max(0, Math.min(100, cropBase.y - (dy / H) * sensitivity));
           img.style.setProperty('--img-x', `${nx}%`);
           img.style.setProperty('--img-y', `${ny}%`);
           img.style.setProperty('--img-zoom', zoom);
