@@ -2528,10 +2528,14 @@
   let activeSlotIndex = -1;
 
   async function addPhotos(files) {
-    const images = Array.from(files).filter(f => f.type.startsWith('image/'));
+    /* iOS can return files with empty MIME type — accept those too */
+    const images = Array.from(files).filter(f => !f.type || f.type.startsWith('image/'));
+    if (!images.length) return;
     const limit = selectedLimit();
     for (const file of images) {
-      const data = await compressImage(file);
+      let data;
+      try { data = await compressImage(file); }
+      catch(e) { console.warn('Photo compression failed:', e); continue; }
       const photo = { id: crypto.randomUUID(), name: file.name, data, createdAt: Date.now() };
       state.photos.unshift(photo);
       if (activeSlotIndex >= 0) {
@@ -2555,7 +2559,7 @@
     /* Restore multi-select for the "Add Photos" button */
     els.input.setAttribute('multiple', '');
     els.input.value = '';
-    persist();
+    try { persist(); } catch(e) { console.warn('Storage full, photos not saved:', e); }
     render();
   }
 
