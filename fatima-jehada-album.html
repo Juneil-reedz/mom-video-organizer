@@ -1594,8 +1594,8 @@
     .book-open {
       display: none;
       place-items: center;
-      perspective: 1800px;
-      perspective-origin: 50% 30%;
+      perspective: 2400px;
+      perspective-origin: 50% 28%;
       width: 100%;
     }
 
@@ -1611,6 +1611,29 @@
       transform: translateZ(0);
       -webkit-transform: translateZ(0);
       isolation: isolate;
+      will-change: transform, filter;
+    }
+
+    .bookview.turning-next {
+      animation: bookStageNext4d 1.12s cubic-bezier(.2,.74,.2,1) forwards;
+    }
+
+    .bookview.turning-prev {
+      animation: bookStagePrev4d 1.12s cubic-bezier(.2,.74,.2,1) forwards;
+    }
+
+    @keyframes bookStageNext4d {
+      0%   { transform: translateZ(0) rotateX(0deg) rotateY(0deg); filter: saturate(1); }
+      38%  { transform: translateZ(18px) rotateX(1.4deg) rotateY(-2.6deg); filter: saturate(1.05); }
+      72%  { transform: translateZ(10px) rotateX(.8deg) rotateY(1.4deg); filter: saturate(1.02); }
+      100% { transform: translateZ(0) rotateX(0deg) rotateY(0deg); filter: saturate(1); }
+    }
+
+    @keyframes bookStagePrev4d {
+      0%   { transform: translateZ(0) rotateX(0deg) rotateY(0deg); filter: saturate(1); }
+      38%  { transform: translateZ(18px) rotateX(1.4deg) rotateY(2.6deg); filter: saturate(1.05); }
+      72%  { transform: translateZ(10px) rotateX(.8deg) rotateY(-1.4deg); filter: saturate(1.02); }
+      100% { transform: translateZ(0) rotateX(0deg) rotateY(0deg); filter: saturate(1); }
     }
 
     .bookview::before,
@@ -1675,7 +1698,9 @@
 
     .bpage-under {
       z-index: 3;
-      box-shadow: inset 8px 0 18px rgba(106,64,31,.07);
+      box-shadow:
+        inset 8px 0 18px rgba(106,64,31,.07),
+        inset -18px 0 34px rgba(248,194,27,.07);
       transform: translateZ(.4px);
     }
 
@@ -1731,31 +1756,39 @@
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
       filter: drop-shadow(0 22px 26px rgba(106,64,31,.16));
+      --curl-side: right;
+      --curl-shadow: rgba(106,64,31,.40);
     }
 
     .bpage-flip.flipping-next {
       opacity: 1;
       visibility: visible;
-      animation: flipToNext3d .9s cubic-bezier(.645,.045,.355,1) forwards;
+      --curl-side: right;
+      animation: flipToNext4d 1.12s cubic-bezier(.2,.74,.2,1) forwards;
     }
 
     .bpage-flip.flipping-prev {
       opacity: 1;
       visibility: visible;
       transform-origin: right center;
-      animation: flipToPrev3d .9s cubic-bezier(.645,.045,.355,1) forwards;
+      --curl-side: left;
+      animation: flipToPrev4d 1.12s cubic-bezier(.2,.74,.2,1) forwards;
     }
 
-    @keyframes flipToNext3d {
-      0%   { transform: rotateY(0deg) translateX(0) translateZ(9px); filter: brightness(1) drop-shadow(0 20px 22px rgba(106,64,31,.14)); }
-      48%  { transform: rotateY(-76deg) translateX(-2px) translateZ(28px); filter: brightness(.98) drop-shadow(14px 22px 28px rgba(106,64,31,.20)); }
-      100% { transform: rotateY(-155deg) translateX(-4px) translateZ(5px); filter: brightness(.96) drop-shadow(0 12px 18px rgba(106,64,31,.08)); }
+    @keyframes flipToNext4d {
+      0%   { transform: rotateY(0deg) rotateX(0deg) skewY(0deg) translateX(0) translateZ(10px); filter: brightness(1.02) drop-shadow(0 20px 22px rgba(106,64,31,.14)); }
+      24%  { transform: rotateY(-34deg) rotateX(2.4deg) skewY(-.8deg) translateX(-1px) translateZ(42px); filter: brightness(1.05) drop-shadow(18px 26px 30px rgba(106,64,31,.22)); }
+      52%  { transform: rotateY(-92deg) rotateX(4.8deg) skewY(-1.3deg) translateX(-4px) translateZ(72px); filter: brightness(.98) drop-shadow(26px 28px 34px rgba(106,64,31,.26)); }
+      78%  { transform: rotateY(-136deg) rotateX(2deg) skewY(-.5deg) translateX(-6px) translateZ(34px); filter: brightness(.94) drop-shadow(13px 18px 24px rgba(106,64,31,.16)); }
+      100% { transform: rotateY(-155deg) rotateX(0deg) skewY(0deg) translateX(-4px) translateZ(5px); filter: brightness(.96) drop-shadow(0 12px 18px rgba(106,64,31,.08)); }
     }
 
-    @keyframes flipToPrev3d {
-      0%   { transform: rotateY(0deg) translateX(0) translateZ(9px); filter: brightness(1) drop-shadow(0 20px 22px rgba(106,64,31,.14)); }
-      48%  { transform: rotateY(76deg) translateX(2px) translateZ(28px); filter: brightness(.98) drop-shadow(-14px 22px 28px rgba(106,64,31,.20)); }
-      100% { transform: rotateY(155deg) translateX(4px) translateZ(5px); filter: brightness(.96) drop-shadow(0 12px 18px rgba(106,64,31,.08)); }
+    @keyframes flipToPrev4d {
+      0%   { transform: rotateY(0deg) rotateX(0deg) skewY(0deg) translateX(0) translateZ(10px); filter: brightness(1.02) drop-shadow(0 20px 22px rgba(106,64,31,.14)); }
+      24%  { transform: rotateY(34deg) rotateX(2.4deg) skewY(.8deg) translateX(1px) translateZ(42px); filter: brightness(1.05) drop-shadow(-18px 26px 30px rgba(106,64,31,.22)); }
+      52%  { transform: rotateY(92deg) rotateX(4.8deg) skewY(1.3deg) translateX(4px) translateZ(72px); filter: brightness(.98) drop-shadow(-26px 28px 34px rgba(106,64,31,.26)); }
+      78%  { transform: rotateY(136deg) rotateX(2deg) skewY(.5deg) translateX(6px) translateZ(34px); filter: brightness(.94) drop-shadow(-13px 18px 24px rgba(106,64,31,.16)); }
+      100% { transform: rotateY(155deg) rotateX(0deg) skewY(0deg) translateX(4px) translateZ(5px); filter: brightness(.96) drop-shadow(0 12px 18px rgba(106,64,31,.08)); }
     }
 
     .bpage-flip-face {
@@ -1770,12 +1803,37 @@
       background: #fffaf0;
     }
 
+    .bpage-flip-face::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 34px;
+      right: 0;
+      border-radius: 0 28px 28px 0;
+      pointer-events: none;
+      background:
+        linear-gradient(to left, rgba(255,255,255,.52), transparent 38%),
+        linear-gradient(to right, transparent 0%, rgba(106,64,31,.18) 74%, rgba(106,64,31,.36) 100%);
+      opacity: .86;
+      transform: translateZ(3px);
+    }
+
     .bpage-flip-back {
       display: block;
       transform: rotateY(180deg) translateZ(1px);
       box-shadow:
         inset -10px 0 18px rgba(106,64,31,.12),
         0 18px 32px rgba(106,64,31,.12);
+    }
+
+    .bpage-flip-back::after {
+      left: 0;
+      right: auto;
+      border-radius: 22px 0 0 22px;
+      background:
+        linear-gradient(to right, rgba(255,255,255,.45), transparent 42%),
+        linear-gradient(to left, transparent 0%, rgba(106,64,31,.16) 72%, rgba(106,64,31,.34) 100%);
     }
 
     /* Lighting gradient – darkens at the fold edge */
@@ -1820,14 +1878,15 @@
 
     .flipping-next .bpage-flip-shadow,
     .flipping-prev .bpage-flip-shadow {
-      animation: shadowPulse .9s cubic-bezier(.645,.045,.355,1) forwards;
+      animation: shadowPulse4d 1.12s cubic-bezier(.2,.74,.2,1) forwards;
     }
 
-    @keyframes shadowPulse {
-      0%   { opacity: 0; background: linear-gradient(to right, rgba(106,64,31,.28) 0%, transparent 58%); }
-      44%  { opacity: .95; }
-      72%  { opacity: .55; }
-      100% { opacity: 0; background: linear-gradient(to right, rgba(106,64,31,.18) 0%, transparent 62%); }
+    @keyframes shadowPulse4d {
+      0%   { opacity: 0; transform: translateX(0) scaleX(.72); background: linear-gradient(to right, rgba(106,64,31,.30) 0%, transparent 58%); }
+      34%  { opacity: .72; transform: translateX(7%) scaleX(.92); }
+      58%  { opacity: 1; transform: translateX(15%) scaleX(1.16); background: radial-gradient(ellipse at 28% 50%, rgba(106,64,31,.36), transparent 60%); }
+      82%  { opacity: .42; transform: translateX(4%) scaleX(.96); }
+      100% { opacity: 0; transform: translateX(0) scaleX(.82); background: linear-gradient(to right, rgba(106,64,31,.18) 0%, transparent 62%); }
     }
 
     /* Corner tap areas */
@@ -3691,8 +3750,10 @@
     const flipBack  = document.querySelector('#bpageFlipBack');
     const under     = document.querySelector('#bpageUnder');
     const current   = document.querySelector('#bpageCurrent');
+    const bookview  = document.querySelector('#bookview');
 
     flipEl.className = 'bpage-flip';
+    bookview?.classList.remove('turning-next', 'turning-prev');
     flipEl.style.animation = 'none';
     void flipEl.offsetWidth;
     flipEl.style.animation = '';
@@ -3706,12 +3767,14 @@
       fillPage(under,     pages[newIndex]);   /* backup reveal layer */
       fillPage(current,   pages[newIndex]);   /* destination is ready immediately */
       flipEl.className = 'bpage-flip flipping-next';
+      bookview?.classList.add('turning-next');
     } else {
       fillPage(flipFront, pages[oldIndex]);   /* departing page slides right */
       fillPage(flipBack,  pages[newIndex]);   /* soft paper back during turn */
       fillPage(under,     pages[newIndex]);   /* backup reveal layer */
       fillPage(current,   pages[newIndex]);   /* destination is ready immediately */
       flipEl.className = 'bpage-flip flipping-prev';
+      bookview?.classList.add('turning-prev');
     }
 
     state.pageIndex = newIndex;
@@ -3722,6 +3785,7 @@
       fillPage(current, pages[state.pageIndex]);
       under.innerHTML = '';
       flipEl.className = 'bpage-flip';
+      bookview?.classList.remove('turning-next', 'turning-prev');
       flipFront.innerHTML = '';
       flipBack.innerHTML  = '';
     }, { once: true });
