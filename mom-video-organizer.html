@@ -57,6 +57,104 @@
       grid-template-rows: auto 1fr;
     }
 
+    .welcome-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background:
+        radial-gradient(circle at 20% 18%, rgba(215, 166, 58, .36), transparent 30%),
+        radial-gradient(circle at 82% 22%, rgba(216, 79, 159, .22), transparent 34%),
+        linear-gradient(135deg, #fff8fd, #f6d8ef 48%, #fff0bd);
+      transition: opacity .45s ease, visibility .45s ease;
+    }
+
+    .welcome-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .welcome-card {
+      position: relative;
+      width: min(560px, 100%);
+      min-height: 420px;
+      border-radius: 8px;
+      padding: clamp(24px, 5vw, 42px);
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      gap: 16px;
+      text-align: center;
+      background: rgba(255, 255, 255, .72);
+      border: 1px solid rgba(215, 166, 58, .48);
+      box-shadow: 0 28px 80px rgba(95, 23, 106, .24);
+      overflow: hidden;
+      backdrop-filter: blur(18px);
+    }
+
+    .welcome-card::before {
+      content: "";
+      position: absolute;
+      inset: -30%;
+      background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, .7) 49%, transparent 58%);
+      animation: welcome-glow 3s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .welcome-logo {
+      width: min(150px, 42vw);
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 8px;
+      background: white;
+      border: 1px solid rgba(215, 166, 58, .6);
+      box-shadow: 0 18px 44px rgba(95, 23, 106, .18), 0 0 0 8px rgba(255, 240, 189, .28);
+      z-index: 1;
+    }
+
+    .welcome-card h2 {
+      z-index: 1;
+      margin: 0;
+      color: var(--green-strong);
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      line-height: 1.02;
+    }
+
+    .welcome-card p {
+      z-index: 1;
+      max-width: 440px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .welcome-skip {
+      z-index: 1;
+      margin-top: 6px;
+    }
+
+    .welcome-progress {
+      z-index: 1;
+      width: min(260px, 70vw);
+      height: 5px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(139, 47, 147, .12);
+    }
+
+    .welcome-progress span {
+      display: block;
+      height: 100%;
+      width: 100%;
+      transform-origin: left;
+      background: linear-gradient(90deg, var(--green), var(--blue), var(--gold));
+      animation: welcome-progress 3s linear forwards;
+    }
+
     header {
       padding: 22px clamp(16px, 3vw, 36px) 18px;
       border-bottom: 1px solid rgba(215, 166, 58, .36);
@@ -839,6 +937,17 @@
       50% { transform: scale(1.05); opacity: .9; }
     }
 
+    @keyframes welcome-glow {
+      0% { transform: translateX(-50%); opacity: 0; }
+      36% { opacity: .78; }
+      100% { transform: translateX(50%); opacity: 0; }
+    }
+
+    @keyframes welcome-progress {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+
     .toast {
       position: fixed;
       left: 50%;
@@ -924,6 +1033,15 @@
   </style>
 </head>
 <body>
+  <section class="welcome-screen" id="welcomeScreen" aria-label="Welcome">
+    <div class="welcome-card">
+      <img class="welcome-logo" src="queen-nur-logo.png" alt="Queen Nur logo">
+      <h2>Welcome, Queen Nur</h2>
+      <p>This app keeps her favorite videos organized by event, ready with captions, and easy to prepare for Facebook Feed or Reels.</p>
+      <div class="welcome-progress" aria-hidden="true"><span></span></div>
+      <button class="button secondary welcome-skip" id="skipWelcomeBtn" type="button">Enter Organizer</button>
+    </div>
+  </section>
   <div class="app">
     <header>
       <div class="topbar">
@@ -1207,7 +1325,9 @@
       drawerTotal: document.querySelector('#drawerTotalCount'),
       drawerPosted: document.querySelector('#drawerPostedCount'),
       drawerReady: document.querySelector('#drawerReadyCount'),
-      drawerEvents: document.querySelector('#drawerEventCount')
+      drawerEvents: document.querySelector('#drawerEventCount'),
+      welcome: document.querySelector('#welcomeScreen'),
+      skipWelcome: document.querySelector('#skipWelcomeBtn')
     };
     let db;
     let videos = [];
@@ -1632,6 +1752,10 @@
       document.body.classList.remove('drawer-open');
     }
 
+    function closeWelcome() {
+      els.welcome.classList.add('hidden');
+    }
+
     els.input.addEventListener('change', event => handleFiles(event.target.files));
     els.search.addEventListener('input', render);
     els.eventFilter.addEventListener('change', render);
@@ -1646,6 +1770,8 @@
     els.openDrawer.addEventListener('click', openDrawer);
     els.closeDrawer.addEventListener('click', closeDrawer);
     els.drawerOverlay.addEventListener('click', closeDrawer);
+    els.skipWelcome.addEventListener('click', closeWelcome);
+    setTimeout(closeWelcome, 3000);
     els.drawer.addEventListener('click', event => {
       const button = event.target.closest('[data-drawer-action]');
       if (!button) return;
