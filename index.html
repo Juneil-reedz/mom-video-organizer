@@ -177,8 +177,9 @@
     }
 
     input[type="file"] {
-      width: 1px; height: 1px; opacity: 0;
-      position: absolute; pointer-events: none;
+      position: absolute;
+      width: 0; height: 0;
+      opacity: 0; overflow: hidden;
     }
 
     /* ── APP SHELL ── */
@@ -579,8 +580,11 @@
       .grid { grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); }
     }
 
+    .add-videos-text { display: inline; }
+
     /* iPhone 15 and similar (393px) */
     @media (max-width: 430px) {
+      .add-videos-text { display: none; }
       :root { --radius: 12px; }
 
       /* Header compact */
@@ -693,10 +697,6 @@
         </div>
         <div class="header-actions">
           <input id="videoInput" type="file" accept="video/*" multiple>
-          <label class="button" for="videoInput">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-            Add Videos
-          </label>
           <button class="button secondary" id="exportBtn" type="button">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -716,6 +716,11 @@
     <!-- Controls bar -->
     <div class="controls-bar">
       <div class="controls-inner">
+        <label class="button" for="videoInput" style="flex-shrink:0">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          <span class="add-videos-text">Add Videos</span>
+        </label>
+        <div class="controls-divider" aria-hidden="true"></div>
         <div class="search-wrap">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
