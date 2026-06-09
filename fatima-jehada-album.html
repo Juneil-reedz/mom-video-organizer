@@ -1372,17 +1372,24 @@
       left: 0;
       top: 0;
       bottom: 0;
-      width: 16px;
-      background: linear-gradient(to right,
-        rgba(106,64,31,.75) 0%, rgba(106,64,31,.50) 60%, rgba(106,64,31,.30) 100%);
+      width: 20px;
+      background:
+        linear-gradient(to right,
+          rgba(72,38,18,.86) 0%,
+          rgba(106,64,31,.72) 36%,
+          rgba(217,147,0,.36) 72%,
+          rgba(255,245,213,.24) 100%);
       transform-origin: right center;
-      transform: rotateY(-90deg) translateZ(-8px);
+      transform: rotateY(-90deg) translateZ(-10px);
       border-radius: 18px 0 0 18px;
+      box-shadow:
+        inset -3px 0 5px rgba(255,245,213,.20),
+        6px 0 18px rgba(106,64,31,.22);
     }
 
     .book3d-cover-face {
       flex: 1;
-      margin-left: 16px;
+      margin-left: 20px;
       border-radius: 18px 28px 28px 18px;
       background:
         linear-gradient(100deg, rgba(106,64,31,.16) 0%, transparent 14%),
@@ -1390,7 +1397,10 @@
         linear-gradient(135deg, #ffe1ec 0%, #fff5d5 60%, #ffd95d 100%);
       border: 1px solid rgba(217,147,0,.42);
       box-shadow:
+        9px 0 0 rgba(255,250,240,.72),
+        13px 3px 0 rgba(217,147,0,.18),
         inset -3px 0 10px rgba(106,64,31,.10),
+        inset 12px 0 18px rgba(106,64,31,.14),
         inset 0 0 40px rgba(248,194,27,.08);
       display: grid;
       place-items: center;
@@ -1460,13 +1470,56 @@
       isolation: isolate;
     }
 
+    .bookview::before,
+    .bookview::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .bookview::before {
+      left: 0;
+      top: 4px;
+      bottom: 4px;
+      width: 16px;
+      border-radius: 22px 4px 4px 22px;
+      background:
+        linear-gradient(to right,
+          rgba(72,38,18,.38) 0%,
+          rgba(106,64,31,.22) 44%,
+          rgba(255,245,213,.16) 78%,
+          transparent 100%);
+      box-shadow:
+        inset 4px 0 8px rgba(72,38,18,.20),
+        5px 0 18px rgba(106,64,31,.11);
+    }
+
+    .bookview::after {
+      right: 0;
+      top: 9px;
+      bottom: 9px;
+      width: 18px;
+      border-radius: 0 28px 28px 0;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(106,64,31,.20) 0 1px,
+          rgba(255,255,255,.34) 1px 4px
+        ),
+        linear-gradient(to left, rgba(217,147,0,.26), rgba(255,250,240,.10) 70%, transparent);
+      box-shadow:
+        inset -5px 0 8px rgba(106,64,31,.16),
+        -7px 0 18px rgba(255,255,255,.25);
+    }
+
     /* Stack depth illusion */
     .bpage {
       position: absolute;
       inset: 0;
       border-radius: 22px 30px 30px 22px;
       background: #fffaf0;
-      border: 1px solid rgba(217,147,0,.20);
+      border: 1px solid rgba(217,147,0,.34);
       overflow: hidden;
       transform: translateZ(0);
       backface-visibility: hidden;
@@ -1487,7 +1540,8 @@
       z-index: 4;
       transform: translateZ(1px);
       box-shadow:
-        inset 7px 0 22px rgba(106,64,31,.10),
+        inset 12px 0 24px rgba(106,64,31,.15),
+        inset -12px 0 18px rgba(217,147,0,.08),
         0 22px 56px rgba(106,64,31,.20);
     }
 
@@ -1495,10 +1549,29 @@
     .bpage-current::before {
       content: "";
       position: absolute;
-      left: 0; top: 0; bottom: 0; width: 2px;
+      left: 0; top: 0; bottom: 0; width: 5px;
       background: linear-gradient(to bottom,
-        transparent, rgba(106,64,31,.22) 15%, rgba(106,64,31,.22) 85%, transparent);
+        transparent, rgba(72,38,18,.42) 15%, rgba(106,64,31,.34) 85%, transparent);
       z-index: 1;
+    }
+
+    .bpage-current::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 6px;
+      bottom: 6px;
+      width: 13px;
+      border-radius: 0 26px 26px 0;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(106,64,31,.20) 0 1px,
+          rgba(255,255,255,.32) 1px 4px
+        ),
+        linear-gradient(to left, rgba(217,147,0,.25), transparent 82%);
+      z-index: 2;
+      opacity: .9;
     }
 
     /* ── Flip Leaf ── */
