@@ -525,7 +525,7 @@
       border-radius: var(--radius);
       padding: clamp(14px, 4vw, 26px);
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: auto auto 1fr auto;
       gap: 12px;
       position: relative;
       overflow: hidden;
@@ -607,7 +607,16 @@
       min-height: 0;
     }
 
-    .slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: var(--img-x, 50%) var(--img-y, 50%);
+      transform: scale(var(--img-zoom, 1));
+      transform-origin: var(--img-x, 50%) var(--img-y, 50%);
+      display: block;
+      transition: transform .15s ease;
+    }
 
     .photo-caption {
       position: absolute;
@@ -661,6 +670,164 @@
 
     .page-sticker.a { left: 18px; bottom: 18px; }
     .page-sticker.b { right: 18px; top: 18px; }
+
+    /* ─── Crop Modal ─── */
+    .crop-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      background: rgba(18,12,8,.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      opacity: 1;
+      transition: opacity .22s ease;
+    }
+    .crop-modal.hidden { opacity: 0; pointer-events: none; }
+
+    .crop-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      padding-top: max(14px, env(safe-area-inset-top));
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .crop-modal-title {
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: -.01em;
+    }
+    .crop-modal-done {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 20px;
+      font-size: .9rem;
+      font-weight: 800;
+      cursor: pointer;
+      min-height: 44px;
+    }
+    .crop-modal-cancel {
+      background: rgba(255,255,255,.12);
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 18px;
+      font-size: .9rem;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 44px;
+    }
+
+    .crop-preview-wrap {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      touch-action: none;
+      cursor: grab;
+      user-select: none;
+    }
+    .crop-preview-wrap:active { cursor: grabbing; }
+
+    .crop-preview-frame {
+      width: min(100%, 420px);
+      aspect-ratio: 1;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,.2);
+      position: relative;
+    }
+    .crop-preview-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: var(--img-x, 50%) var(--img-y, 50%);
+      transform: scale(var(--img-zoom, 1));
+      transform-origin: var(--img-x, 50%) var(--img-y, 50%);
+      display: block;
+      pointer-events: none;
+    }
+
+    .crop-hint {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.5);
+      color: rgba(255,255,255,.85);
+      font-size: .72rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+      pointer-events: none;
+      transition: opacity .4s ease;
+    }
+
+    .crop-controls {
+      flex-shrink: 0;
+      padding: 16px 24px;
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: rgba(255,255,255,.06);
+      border-top: 1px solid rgba(255,255,255,.1);
+    }
+    .crop-ctrl-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .crop-ctrl-label {
+      color: rgba(255,255,255,.7);
+      font-size: .8rem;
+      font-weight: 700;
+      min-width: 52px;
+    }
+    .crop-ctrl-row input[type=range] {
+      flex: 1;
+      min-height: 44px;
+      accent-color: var(--accent);
+      background: transparent;
+      border: none;
+    }
+    .crop-reset-btn {
+      background: rgba(255,255,255,.12);
+      color: rgba(255,255,255,.85);
+      border: none;
+      border-radius: 12px;
+      padding: 8px 16px;
+      font-size: .8rem;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 44px;
+      white-space: nowrap;
+    }
+
+    /* crop button on photo tiles */
+    .photo-tile .crop-btn {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      background: rgba(18,12,8,.68);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: .68rem;
+      font-weight: 800;
+      padding: 3px 7px;
+      cursor: pointer;
+      line-height: 1.4;
+      z-index: 4;
+      min-height: 28px;
+    }
 
     /* ─── Caption Designer ─── */
     .caption-row {
@@ -1905,6 +2072,28 @@
 
 </div><!-- /app -->
 
+<!-- ─── Crop / Adjust Modal ─── -->
+<div class="crop-modal hidden" id="cropModal" role="dialog" aria-modal="true" aria-label="Adjust Photo">
+  <div class="crop-modal-header">
+    <button class="crop-modal-cancel" id="cropCancel" type="button">Cancel</button>
+    <span class="crop-modal-title">Adjust Photo</span>
+    <button class="crop-modal-done" id="cropDone" type="button">Done</button>
+  </div>
+  <div class="crop-preview-wrap" id="cropPreviewWrap">
+    <div class="crop-preview-frame" id="cropPreviewFrame">
+      <img id="cropPreviewImg" src="" alt="Photo to adjust">
+      <span class="crop-hint" id="cropHint">Drag to reposition</span>
+    </div>
+  </div>
+  <div class="crop-controls">
+    <div class="crop-ctrl-row">
+      <span class="crop-ctrl-label">🔍 Zoom</span>
+      <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1">
+      <button class="crop-reset-btn" id="cropReset" type="button">Reset</button>
+    </div>
+  </div>
+</div>
+
 <canvas id="exportCanvas"></canvas>
 
 <script>
@@ -1913,6 +2102,7 @@
     photos: JSON.parse(localStorage.getItem('fatimaAlbumPhotos') || '[]'),
     pages: JSON.parse(localStorage.getItem('fatimaAlbumPages') || '[]'),
     captions: JSON.parse(localStorage.getItem('fatimaAlbumCaptions') || '{}'),
+    crops: JSON.parse(localStorage.getItem('fatimaAlbumCrops') || '{}'),
     selected: [],
     bookOpen: false,
     pageIndex: 0
@@ -1967,6 +2157,7 @@
     localStorage.setItem('fatimaAlbumPhotos', JSON.stringify(state.photos));
     localStorage.setItem('fatimaAlbumPages', JSON.stringify(state.pages));
     localStorage.setItem('fatimaAlbumCaptions', JSON.stringify(state.captions));
+    localStorage.setItem('fatimaAlbumCrops', JSON.stringify(state.crops));
   }
 
   /* ─── Image compression ─── */
@@ -2026,8 +2217,15 @@
       frame: els.frameStyle.value,
       sticker: els.stickerStyle.value,
       captions: captionSettings(),
+      crops: cropSettings(),
       selected: [...state.selected]
     };
+  }
+
+  function cropSettings() {
+    const out = {};
+    state.selected.forEach(id => { out[id] = state.crops[id] || { x: 50, y: 50, zoom: 1 }; });
+    return out;
   }
 
   function captionSettings() {
@@ -2088,6 +2286,10 @@
         const img = document.createElement('img');
         img.src = chosen[i].data;
         img.alt = chosen[i].name;
+        const crop = state.crops[chosen[i].id] || { x: 50, y: 50, zoom: 1 };
+        img.style.setProperty('--img-x', `${crop.x}%`);
+        img.style.setProperty('--img-y', `${crop.y}%`);
+        img.style.setProperty('--img-zoom', crop.zoom);
         slot.append(img);
         const caption = settings.captions[chosen[i].id] || defaultCaption();
         if (caption.text) {
@@ -2249,13 +2451,15 @@
     }
     els.photoGrid.innerHTML = '';
     state.photos.forEach(photo => {
-      const btn = document.createElement('button');
+      const tile = document.createElement('div');
       const order = state.selected.indexOf(photo.id);
-      btn.className = `photo-tile ${order >= 0 ? 'selected' : ''}`;
-      btn.type = 'button';
-      btn.innerHTML = `<img src="${photo.data}" alt="" loading="lazy"><span class="badge">${order >= 0 ? order + 1 : '+'}</span>`;
-      btn.addEventListener('click', () => togglePhoto(photo.id));
-      els.photoGrid.append(btn);
+      tile.className = `photo-tile ${order >= 0 ? 'selected' : ''}`;
+      const hasCrop = state.crops[photo.id] && (state.crops[photo.id].zoom !== 1 || state.crops[photo.id].x !== 50 || state.crops[photo.id].y !== 50);
+      tile.innerHTML = `<img src="${photo.data}" alt="" loading="lazy"><span class="badge">${order >= 0 ? order + 1 : '+'}</span><button class="crop-btn" type="button" title="Adjust photo">${hasCrop ? '✂️' : '✂️'} Adjust</button>`;
+      tile.querySelector('img').addEventListener('click', () => togglePhoto(photo.id));
+      tile.querySelector('.badge').addEventListener('click', () => togglePhoto(photo.id));
+      tile.querySelector('.crop-btn').addEventListener('click', e => { e.stopPropagation(); openCropModal(photo.id); });
+      els.photoGrid.append(tile);
     });
   }
 
@@ -2325,6 +2529,7 @@
     els.frameStyle.value = page.frame;
     els.stickerStyle.value = page.sticker;
     Object.assign(state.captions, page.captions || {});
+    Object.assign(state.crops, page.crops || {});
     state.selected = [...page.selected];
     render();
     document.querySelector('#tabStudio').click();
@@ -2381,10 +2586,12 @@
     }
     const selected = (page.selected || []).map(id => state.photos.find(p => p.id === id)).filter(Boolean).slice(0, 4);
     const captions = page.captions || {};
+    const savedCrops = page.crops || {};
     const photos = selected.map(photo => {
       const cap = captions[photo.id] || defaultCaption();
+      const cr = savedCrops[photo.id] || state.crops[photo.id] || { x: 50, y: 50, zoom: 1 };
       return `<div class="book-photo">
-        <img src="${photo.data}" alt="" loading="lazy">
+        <img src="${photo.data}" alt="" loading="lazy" style="object-position:${cr.x}% ${cr.y}%;transform:scale(${cr.zoom});transform-origin:${cr.x}% ${cr.y}%">
         ${cap.text ? `<div class="book-caption" style="--caption-color:${cap.color};--caption-font:${fontFamily(cap.font)};--caption-x:${cap.x??50}%;--caption-y:${cap.y??86}%">${escapeHtml(cap.text)}</div>` : ''}
         ${cap.sticker ? `<div class="book-sticker" style="--sticker-x:${cap.stickerX??84}%;--sticker-y:${cap.stickerY??18}%">${escapeHtml(cap.sticker)}</div>` : ''}
       </div>`;
@@ -2686,6 +2893,108 @@
 
   document.querySelector('#drawerSaveBtn').addEventListener('click', () => { closeDrawer(); setTimeout(savePage, 320); });
   document.querySelector('#drawerExportBtn').addEventListener('click', () => { closeDrawer(); setTimeout(exportPageImage, 320); });
+
+  /* ─── Crop Modal ─── */
+  (function initCropModal() {
+    const modal    = document.querySelector('#cropModal');
+    const previewImg = document.querySelector('#cropPreviewImg');
+    const zoomSlider = document.querySelector('#cropZoom');
+    const hint     = document.querySelector('#cropHint');
+    let activePhotoId = null;
+    let workingCrop = { x: 50, y: 50, zoom: 1 };
+
+    function applyCropToPreview() {
+      previewImg.style.setProperty('--img-x', `${workingCrop.x}%`);
+      previewImg.style.setProperty('--img-y', `${workingCrop.y}%`);
+      previewImg.style.setProperty('--img-zoom', workingCrop.zoom);
+      zoomSlider.value = workingCrop.zoom;
+    }
+
+    window.openCropModal = function(photoId) {
+      const photo = state.photos.find(p => p.id === photoId);
+      if (!photo) return;
+      activePhotoId = photoId;
+      workingCrop = Object.assign({ x: 50, y: 50, zoom: 1 }, state.crops[photoId]);
+      previewImg.src = photo.data;
+      applyCropToPreview();
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => { if (hint) hint.style.opacity = '0'; }, 2200);
+    };
+
+    function closeCropModal(save) {
+      if (save && activePhotoId) {
+        state.crops[activePhotoId] = { ...workingCrop };
+        persist();
+        renderPreview();
+        renderPhotos();
+      }
+      activePhotoId = null;
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+      previewImg.src = '';
+    }
+
+    document.querySelector('#cropDone').addEventListener('click', () => closeCropModal(true));
+    document.querySelector('#cropCancel').addEventListener('click', () => closeCropModal(false));
+    document.querySelector('#cropReset').addEventListener('click', () => {
+      workingCrop = { x: 50, y: 50, zoom: 1 };
+      applyCropToPreview();
+      if (hint) { hint.style.opacity = '1'; setTimeout(() => { hint.style.opacity = '0'; }, 1800); }
+    });
+
+    zoomSlider.addEventListener('input', () => {
+      workingCrop.zoom = Number(zoomSlider.value);
+      applyCropToPreview();
+    });
+
+    /* Drag-to-pan on the preview frame */
+    const frame = document.querySelector('#cropPreviewFrame');
+    let dragging = false;
+    let lastPt = { x: 0, y: 0 };
+    let hintHidden = false;
+
+    frame.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      dragging = true;
+      lastPt = { x: e.clientX, y: e.clientY };
+      frame.setPointerCapture(e.pointerId);
+      if (!hintHidden && hint) { hint.style.opacity = '0'; hintHidden = true; }
+    });
+
+    frame.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      const dx = e.clientX - lastPt.x;
+      const dy = e.clientY - lastPt.y;
+      lastPt = { x: e.clientX, y: e.clientY };
+      /* sensitivity: more zoom → slower drag (need finer control) */
+      const sensitivity = 30 / workingCrop.zoom;
+      workingCrop.x = Math.max(0, Math.min(100, workingCrop.x - dx / sensitivity));
+      workingCrop.y = Math.max(0, Math.min(100, workingCrop.y - dy / sensitivity));
+      applyCropToPreview();
+    });
+
+    frame.addEventListener('pointerup', () => { dragging = false; });
+    frame.addEventListener('pointercancel', () => { dragging = false; });
+
+    /* Pinch-to-zoom on the preview frame */
+    let pinchDist0 = null;
+    let pinchZoom0 = 1;
+    frame.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        pinchDist0 = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        pinchZoom0 = workingCrop.zoom;
+      }
+    }, { passive: true });
+    frame.addEventListener('touchmove', e => {
+      if (e.touches.length === 2 && pinchDist0 !== null) {
+        const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        workingCrop.zoom = Math.max(1, Math.min(3, pinchZoom0 * (dist / pinchDist0)));
+        applyCropToPreview();
+      }
+    }, { passive: true });
+    frame.addEventListener('touchend', () => { pinchDist0 = null; });
+  })();
 
   render();
 </script>
