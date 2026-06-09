@@ -1474,13 +1474,14 @@
 
     .bookview-scene {
       width: 100%;
-      padding: clamp(22px, 5vw, 46px) clamp(18px, 6vw, 44px) clamp(28px, 5vw, 54px); /* extra room for drop-shadow & page-stack bleed */
-      display: grid;
-      place-items: center;
+      padding: clamp(22px, 5vw, 46px) clamp(18px, 6vw, 44px) clamp(28px, 5vw, 54px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       position: relative;
       overflow: visible;
       touch-action: pan-y;
-      /* no min-height — let the book's natural aspect-ratio size determine height */
     }
 
     /* ── Closed Cover ── */
@@ -1593,13 +1594,14 @@
     /* ── Open Book (3D page stack) ── */
     .book-open {
       display: none;
-      place-items: center;
+      align-items: center;
+      justify-content: center;
       perspective: 2400px;
       perspective-origin: 50% 28%;
       width: 100%;
     }
 
-    .book-open.visible { display: grid; }
+    .book-open.visible { display: flex; }
 
     .bookview {
       position: relative;
@@ -1615,11 +1617,11 @@
     }
 
     .bookview.turning-next {
-      animation: bookStageNext4d 1.12s cubic-bezier(.2,.74,.2,1) forwards;
+      animation: bookStageNext4d 2.2s cubic-bezier(.2,.74,.2,1) forwards;
     }
 
     .bookview.turning-prev {
-      animation: bookStagePrev4d 1.12s cubic-bezier(.2,.74,.2,1) forwards;
+      animation: bookStagePrev4d 2.2s cubic-bezier(.2,.74,.2,1) forwards;
     }
 
     @keyframes bookStageNext4d {
@@ -1764,7 +1766,7 @@
       opacity: 1;
       visibility: visible;
       --curl-side: right;
-      animation: flipToNext4d 1.12s cubic-bezier(.2,.74,.2,1) forwards;
+      animation: flipToNext4d 2.2s cubic-bezier(.2,.74,.2,1) forwards;
     }
 
     .bpage-flip.flipping-prev {
@@ -1772,7 +1774,7 @@
       visibility: visible;
       transform-origin: right center;
       --curl-side: left;
-      animation: flipToPrev4d 1.12s cubic-bezier(.2,.74,.2,1) forwards;
+      animation: flipToPrev4d 2.2s cubic-bezier(.2,.74,.2,1) forwards;
     }
 
     @keyframes flipToNext4d {
@@ -1878,7 +1880,7 @@
 
     .flipping-next .bpage-flip-shadow,
     .flipping-prev .bpage-flip-shadow {
-      animation: shadowPulse4d 1.12s cubic-bezier(.2,.74,.2,1) forwards;
+      animation: shadowPulse4d 2.2s cubic-bezier(.2,.74,.2,1) forwards;
     }
 
     @keyframes shadowPulse4d {
