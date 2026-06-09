@@ -392,7 +392,7 @@
       font-size: .74rem; font-weight: 700;
     }
 
-    .card-actions { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; }
+    .card-actions { display: grid; grid-template-columns: repeat(6,1fr); gap: 6px; }
 
     .icon-button {
       min-height: 36px; display: inline-grid; place-items: center;
@@ -405,6 +405,59 @@
     .icon-button.danger:hover { background: #fff0f3; border-color: var(--coral); }
     .icon-button[data-action="share"] { color: #0084ff; }
     .icon-button[data-action="share"]:hover { background: #e8f4ff; border-color: #0084ff; }
+    .icon-button[data-action="schedule"] { color: var(--gold); }
+    .icon-button[data-action="schedule"]:hover { background: var(--gold-soft); border-color: var(--gold); }
+
+    /* ── SCHEDULE ── */
+    .platform-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .platform-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px; border: 1.5px solid var(--line);
+      border-radius: 10px; cursor: pointer; user-select: none;
+      transition: border-color .15s, background .15s;
+    }
+    .platform-item:has(input:checked) { border-color: var(--purple); background: var(--soft); }
+    .platform-item input { accent-color: var(--purple); width: 18px; height: 18px; flex-shrink: 0; cursor: pointer; }
+    .platform-name { font-size: .85rem; font-weight: 700; }
+
+    .sched-section { padding: 0 clamp(16px,3vw,36px) 32px; max-width: 1320px; margin: 0 auto; }
+    .sched-section h2 { font-family: var(--font-display); color: var(--purple-dark); margin: 0 0 16px; font-size: 1.4rem; }
+    .sched-list { display: grid; gap: 12px; }
+    .sched-empty { text-align: center; padding: 48px 16px; color: var(--muted); }
+
+    .sched-card {
+      background: white; border: 1px solid rgba(215,166,58,.18);
+      border-radius: var(--radius); padding: 14px;
+      display: grid; gap: 10px; box-shadow: var(--shadow-sm);
+    }
+    .sched-card-head { display: flex; gap: 12px; align-items: flex-start; }
+    .sched-thumb { width: 80px; height: 46px; border-radius: 8px; object-fit: cover; background: var(--soft); flex-shrink: 0; }
+    .sched-thumb-placeholder { width: 80px; height: 46px; border-radius: 8px; background: var(--soft); flex-shrink: 0; display: grid; place-items: center; color: var(--muted); }
+    .sched-info { flex: 1; min-width: 0; display: grid; gap: 4px; }
+    .sched-title { font-weight: 800; font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sched-meta { font-size: .78rem; color: var(--muted); }
+    .sched-platforms { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
+    .sched-pbadge { font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; background: var(--soft); color: var(--purple); }
+    .sched-sbadge { font-size: .74rem; font-weight: 800; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+    .sched-sbadge.pending  { background: #fff0bd; color: #7a5800; }
+    .sched-sbadge.triggered { background: #e0f7e9; color: #1a6b3c; }
+    .sched-sbadge.cancelled { background: #ffeef2; color: var(--coral); }
+    .sched-caption { font-size: .82rem; color: var(--muted); white-space: pre-wrap; word-break: break-word; background: var(--soft); border-radius: 8px; padding: 8px 10px; }
+    .sched-footer { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .sched-privacy { font-size: .78rem; color: var(--muted); flex: 1; }
+
+    /* Countdown banner */
+    .countdown-banner {
+      position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%);
+      z-index: 40; background: linear-gradient(135deg, var(--purple-dark), var(--pink));
+      color: white; padding: 13px 20px; border-radius: 14px;
+      box-shadow: var(--shadow-lg); font-weight: 700; font-size: .88rem;
+      display: flex; align-items: center; gap: 10px;
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity .3s, visibility .3s;
+      max-width: calc(100vw - 32px); text-align: center;
+    }
+    .countdown-banner.show { opacity: 1; visibility: visible; }
 
     /* grid column views */
     .library.grid1 .grid { grid-template-columns: 1fr; }
@@ -807,6 +860,13 @@
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
               Ready to Post
             </button>
+            <button class="drawer-button" type="button" data-drawer-action="scheduled">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+                <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
+              </svg>
+              Scheduled Posts
+            </button>
             <button class="drawer-button" type="button" data-drawer-action="posted">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M9 12l2 2 4-4"/>
@@ -824,6 +884,10 @@
     <main>
       <section class="library" id="library">
         <div id="content"></div>
+      </section>
+      <section class="sched-section" id="schedSection" style="display:none">
+        <h2>Scheduled Posts</h2>
+        <div class="sched-list" id="schedContent"></div>
       </section>
     </main>
 
@@ -897,11 +961,62 @@
     </form>
   </dialog>
 
+  <!-- Schedule dialog -->
+  <dialog id="schedDialog">
+    <form method="dialog">
+      <div class="modal-head">
+        <h2 id="schedDialogTitle">Schedule Post</h2>
+        <button class="icon-button" value="cancel" type="submit" title="Close">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="schedVideoId">
+        <input type="hidden" id="schedEditId">
+        <label>Caption &amp; Hashtags
+          <textarea id="schedCaption" rows="4" placeholder="Write your caption and add #hashtags…"></textarea>
+        </label>
+        <div>
+          <div style="font-size:.85rem;font-weight:700;margin-bottom:8px;color:var(--ink)">Post to</div>
+          <div class="platform-grid">
+            <label class="platform-item"><input type="checkbox" class="sched-platform" value="facebook-feed"><span class="platform-name">📘 Facebook Feed</span></label>
+            <label class="platform-item"><input type="checkbox" class="sched-platform" value="facebook-reels"><span class="platform-name">🎬 Facebook Reels</span></label>
+            <label class="platform-item"><input type="checkbox" class="sched-platform" value="instagram"><span class="platform-name">📸 Instagram</span></label>
+            <label class="platform-item"><input type="checkbox" class="sched-platform" value="tiktok"><span class="platform-name">🎵 TikTok</span></label>
+            <label class="platform-item"><input type="checkbox" class="sched-platform" value="youtube"><span class="platform-name">▶️ YouTube</span></label>
+            <label class="platform-item"><input type="checkbox" class="sched-platform" value="twitter"><span class="platform-name">🐦 X / Twitter</span></label>
+          </div>
+        </div>
+        <div class="form-grid">
+          <label>Date &amp; Time<input id="schedDatetime" type="datetime-local"></label>
+          <label>Privacy
+            <select id="schedPrivacy">
+              <option value="public">🌍 Public</option>
+              <option value="friends">👥 Friends Only</option>
+              <option value="only-me">🔒 Only Me</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="button secondary" value="cancel" type="submit">Cancel</button>
+        <button class="button" id="saveSchedBtn" value="default" type="button">Save Schedule</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Countdown banner -->
+  <div class="countdown-banner" id="countdownBanner">
+    <svg style="width:18px;height:18px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+    <span id="countdownText"></span>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
     const DB_NAME = 'mom-video-organizer';
     const STORE = 'videos';
+    const SCHED_STORE = 'schedules';
     const els = {
       input:            document.querySelector('#videoInput'),
       content:          document.querySelector('#content'),
@@ -945,6 +1060,18 @@
       drawer:           document.querySelector('#drawer'),
       welcome:          document.querySelector('#welcomeScreen'),
       skipWelcome:      document.querySelector('#skipWelcomeBtn'),
+      schedDialog:      document.querySelector('#schedDialog'),
+      schedDialogTitle: document.querySelector('#schedDialogTitle'),
+      schedVideoId:     document.querySelector('#schedVideoId'),
+      schedEditId:      document.querySelector('#schedEditId'),
+      schedCaption:     document.querySelector('#schedCaption'),
+      schedDatetime:    document.querySelector('#schedDatetime'),
+      schedPrivacy:     document.querySelector('#schedPrivacy'),
+      saveSched:        document.querySelector('#saveSchedBtn'),
+      schedSection:     document.querySelector('#schedSection'),
+      schedContent:     document.querySelector('#schedContent'),
+      countdownBanner:  document.querySelector('#countdownBanner'),
+      countdownText:    document.querySelector('#countdownText'),
     };
 
     let db;
@@ -953,8 +1080,12 @@
 
     function openDb() {
       return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, 1);
-        req.onupgradeneeded = () => req.result.createObjectStore(STORE, { keyPath: 'id' });
+        const req = indexedDB.open(DB_NAME, 2);
+        req.onupgradeneeded = e => {
+          const d = req.result;
+          if (!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE, { keyPath: 'id' });
+          if (!d.objectStoreNames.contains(SCHED_STORE)) d.createObjectStore(SCHED_STORE, { keyPath: 'id' });
+        };
         req.onsuccess = () => resolve(req.result);
         req.onerror = () => reject(req.error);
       });
@@ -962,6 +1093,20 @@
 
     function tx(mode = 'readonly') {
       return db.transaction(STORE, mode).objectStore(STORE);
+    }
+
+    function txS(mode = 'readonly') {
+      return db.transaction(SCHED_STORE, mode).objectStore(SCHED_STORE);
+    }
+
+    function getAllSchedules() {
+      return new Promise((res, rej) => { const r = txS().getAll(); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+    }
+    function putSchedule(s) {
+      return new Promise((res, rej) => { const r = txS('readwrite').put(s); r.onsuccess = () => res(); r.onerror = () => rej(r.error); });
+    }
+    function deleteScheduleById(id) {
+      return new Promise((res, rej) => { const r = txS('readwrite').delete(id); r.onsuccess = () => res(); r.onerror = () => rej(r.error); });
     }
 
     function getAllVideos() {
@@ -1134,7 +1279,25 @@
       els.eventFilter.value = cur;
     }
 
+    function showScheduledView() {
+      view = 'scheduled';
+      els.library.style.display = 'none';
+      els.schedSection.style.display = '';
+      els.grid1Btn.classList.remove('active');
+      els.grid2Btn.classList.remove('active');
+      els.listBtn.classList.remove('active');
+      renderScheduled();
+    }
+
+    function showLibraryView(v) {
+      view = v || view;
+      els.library.style.display = '';
+      els.schedSection.style.display = 'none';
+    }
+
     function render() {
+      if (view === 'scheduled') { showScheduledView(); return; }
+      showLibraryView();
       renderStats();
       const list = filteredVideos();
       els.library.classList.remove('grid1', 'grid2', 'list');
@@ -1206,6 +1369,9 @@
             <button class="icon-button" data-action="share" title="Share to Messenger" type="button">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
             </button>
+            <button class="icon-button" data-action="schedule" title="Schedule post" type="button">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="12" cy="16" r="1.5" fill="currentColor"/></svg>
+            </button>
             <button class="icon-button danger" data-action="delete" title="Delete video" type="button">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
             </button>
@@ -1215,6 +1381,7 @@
       card.querySelector('[data-action="edit"]').addEventListener('click', () => openEditor(video));
       card.querySelector('[data-action="facebook"]').addEventListener('click', () => openPostDialog(video));
       card.querySelector('[data-action="share"]').addEventListener('click', () => shareVideo(video));
+      card.querySelector('[data-action="schedule"]').addEventListener('click', () => openScheduleDialog(video));
       card.querySelector('[data-action="delete"]').addEventListener('click', () => removeVideo(video));
       return card;
     }
@@ -1241,6 +1408,205 @@
         }
       } catch (e) {
         if (e.name !== 'AbortError') alert('Could not share: ' + e.message);
+      }
+    }
+
+    /* ── SCHEDULING ── */
+    const PLATFORM_LABELS = {
+      'facebook-feed': '📘 Facebook Feed',
+      'facebook-reels': '🎬 Facebook Reels',
+      'instagram': '📸 Instagram',
+      'tiktok': '🎵 TikTok',
+      'youtube': '▶️ YouTube',
+      'twitter': '🐦 X / Twitter',
+    };
+
+    function openScheduleDialog(video, schedId = null) {
+      els.schedVideoId.value = video.id;
+      els.schedEditId.value = schedId || '';
+      els.schedDialogTitle.textContent = schedId ? 'Edit Schedule' : 'Schedule Post';
+      els.saveSched.textContent = schedId ? 'Update Schedule' : 'Save Schedule';
+      if (schedId) {
+        // pre-fill from existing schedule
+        getAllSchedules().then(all => {
+          const s = all.find(x => x.id === schedId);
+          if (!s) return;
+          els.schedCaption.value = s.caption || '';
+          document.querySelectorAll('.sched-platform').forEach(cb => { cb.checked = (s.platforms || []).includes(cb.value); });
+          els.schedDatetime.value = s.scheduledAt ? s.scheduledAt.slice(0,16) : '';
+          els.schedPrivacy.value = s.privacy || 'public';
+          els.schedDialog.showModal();
+        });
+      } else {
+        els.schedCaption.value = video.caption || '';
+        document.querySelectorAll('.sched-platform').forEach(cb => { cb.checked = false; });
+        const def = new Date(Date.now() + 60 * 60 * 1000);
+        els.schedDatetime.value = def.toISOString().slice(0, 16);
+        els.schedPrivacy.value = video.privacy === 'Friends' ? 'friends' : 'public';
+        els.schedDialog.showModal();
+      }
+    }
+
+    async function saveScheduleForm() {
+      const videoId = els.schedVideoId.value;
+      const video = videos.find(v => v.id === videoId);
+      if (!video) return showToast('Video not found.');
+      const platforms = [...document.querySelectorAll('.sched-platform:checked')].map(c => c.value);
+      if (!platforms.length) return showToast('Pick at least one platform.');
+      const dt = els.schedDatetime.value;
+      if (!dt) return showToast('Pick a date and time.');
+      const scheduledAt = new Date(dt).toISOString();
+      if (new Date(scheduledAt) <= new Date()) return showToast('Choose a future date and time.');
+      const editId = els.schedEditId.value;
+      const s = {
+        id: editId || crypto.randomUUID(),
+        videoId,
+        videoTitle: video.title,
+        videoThumb: video.thumb || '',
+        caption: els.schedCaption.value.trim(),
+        platforms,
+        scheduledAt,
+        privacy: els.schedPrivacy.value,
+        status: 'pending',
+        createdAt: Date.now(),
+      };
+      await putSchedule(s);
+      els.schedDialog.close();
+      showToast(editId ? 'Schedule updated.' : `Post scheduled for ${formatSchedDate(scheduledAt)}.`);
+      renderScheduled();
+    }
+
+    async function cancelSchedule(id) {
+      if (!confirm('Cancel this scheduled post?')) return;
+      const all = await getAllSchedules();
+      const s = all.find(x => x.id === id);
+      if (!s) return;
+      s.status = 'cancelled';
+      await putSchedule(s);
+      renderScheduled();
+      showToast('Schedule cancelled.');
+    }
+
+    async function editScheduleEntry(id) {
+      const all = await getAllSchedules();
+      const s = all.find(x => x.id === id);
+      if (!s) return;
+      const video = videos.find(v => v.id === s.videoId);
+      if (!video) return showToast('Original video not found.');
+      openScheduleDialog(video, id);
+    }
+
+    function formatSchedDate(iso) {
+      const d = new Date(iso);
+      return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    async function triggerScheduledPost(s) {
+      s.status = 'triggered';
+      await putSchedule(s);
+      hideBanner();
+      renderScheduled();
+      const video = videos.find(v => v.id === s.videoId);
+      if (!video || !video.blob) { showToast('Ready to post — but video file missing. Re-add it.'); return; }
+      const ext = (video.fileName || 'video.mp4').split('.').pop();
+      const file = new File([video.blob], video.fileName || `${video.title}.${ext}`, { type: video.blob.type || 'video/mp4' });
+      const caption = s.caption || video.caption || '';
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: video.title, text: caption });
+          showToast('Shared! Choose your platform to finish posting.');
+          return;
+        } catch (e) { if (e.name === 'AbortError') return; }
+      }
+      // Fallback: copy caption + open first selected platform
+      try { await navigator.clipboard.writeText(caption); } catch {}
+      const platformUrls = {
+        'facebook-feed': 'https://www.facebook.com/',
+        'facebook-reels': 'https://www.facebook.com/reels/create',
+        'instagram': 'https://www.instagram.com/',
+        'tiktok': 'https://www.tiktok.com/upload',
+        'youtube': 'https://www.youtube.com/upload',
+        'twitter': 'https://twitter.com/compose/tweet',
+      };
+      const first = s.platforms[0];
+      if (first && platformUrls[first]) window.open(platformUrls[first], '_blank');
+      showToast('Caption copied. Paste it when you post!');
+    }
+
+    let countdownInterval = null;
+    function hideBanner() {
+      els.countdownBanner.classList.remove('show');
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+
+    async function checkSchedules() {
+      if (!db) return;
+      const all = await getAllSchedules();
+      const now = Date.now();
+      for (const s of all) {
+        if (s.status !== 'pending') continue;
+        const fireAt = new Date(s.scheduledAt).getTime();
+        const diff = fireAt - now;
+        if (diff <= 0 && navigator.onLine) {
+          await triggerScheduledPost(s);
+          return;
+        }
+        // Show countdown banner when ≤ 60 seconds away
+        if (diff > 0 && diff <= 60000) {
+          const secs = Math.ceil(diff / 1000);
+          els.countdownText.textContent = `Posting "${s.videoTitle}" in ${secs}s…`;
+          els.countdownBanner.classList.add('show');
+          clearInterval(countdownInterval);
+          countdownInterval = setInterval(async () => {
+            const d2 = new Date(s.scheduledAt).getTime() - Date.now();
+            if (d2 <= 0) {
+              clearInterval(countdownInterval);
+              if (navigator.onLine) await triggerScheduledPost(s);
+              else { hideBanner(); showToast('No WiFi — post delayed. Will retry automatically.'); }
+            } else {
+              els.countdownText.textContent = `Posting "${s.videoTitle}" in ${Math.ceil(d2/1000)}s…`;
+            }
+          }, 1000);
+          return;
+        }
+      }
+      // No imminent post — hide banner if showing
+      if (!document.querySelector('.countdown-banner.show') === false) hideBanner();
+    }
+
+    async function renderScheduled() {
+      const all = await getAllSchedules();
+      all.sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
+      if (!all.length) {
+        els.schedContent.innerHTML = '<div class="sched-empty"><p>No scheduled posts yet.<br>Tap the 📅 button on any video to schedule it.</p></div>';
+        return;
+      }
+      els.schedContent.innerHTML = '';
+      for (const s of all) {
+        const card = document.createElement('div');
+        card.className = 'sched-card';
+        const isPending = s.status === 'pending';
+        const statusLabel = { pending: 'Pending', triggered: 'Posted', cancelled: 'Cancelled' }[s.status] || s.status;
+        card.innerHTML = `
+          <div class="sched-card-head">
+            ${s.videoThumb ? `<img class="sched-thumb" src="${s.videoThumb}" alt="">` : `<div class="sched-thumb-placeholder"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21"/></svg></div>`}
+            <div class="sched-info">
+              <div class="sched-title">${escapeHtml(s.videoTitle)}</div>
+              <div class="sched-meta">🕐 ${formatSchedDate(s.scheduledAt)}</div>
+              <div class="sched-platforms">
+                ${(s.platforms || []).map(p => `<span class="sched-pbadge">${PLATFORM_LABELS[p] || p}</span>`).join('')}
+                <span class="sched-sbadge ${s.status}">${statusLabel}</span>
+              </div>
+            </div>
+          </div>
+          ${s.caption ? `<div class="sched-caption">${escapeHtml(s.caption)}</div>` : ''}
+          <div class="sched-footer">
+            <span class="sched-privacy">${{ public:'🌍 Public', friends:'👥 Friends', 'only-me':'🔒 Only Me' }[s.privacy] || ''}</span>
+            ${isPending ? `<button class="button secondary" style="min-height:34px;font-size:.8rem;padding:0 12px" data-edit-sched="${s.id}">Edit</button>
+            <button class="button" style="min-height:34px;font-size:.8rem;padding:0 12px;background:var(--coral)" data-cancel-sched="${s.id}">Cancel</button>` : ''}
+          </div>`;
+        els.schedContent.appendChild(card);
       }
     }
 
@@ -1379,15 +1745,30 @@
     els.saveEdit.addEventListener('click', saveEdit);
     els.copyCaption.addEventListener('click', copyPostCaption);
     els.shareFacebook.addEventListener('click', shareToFacebook);
-    els.grid1Btn.addEventListener('click', () => { view = 'grid1'; render(); });
-    els.grid2Btn.addEventListener('click', () => { view = 'grid2'; render(); });
-    els.listBtn.addEventListener('click', () => { view = 'list'; render(); });
     els.openDrawer.addEventListener('click', openDrawer);
     els.closeDrawer.addEventListener('click', closeDrawer);
     els.drawerOverlay.addEventListener('click', closeDrawer);
     els.skipWelcome.addEventListener('click', closeWelcome);
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+    els.saveSched.addEventListener('click', saveScheduleForm);
+
+    // Edit / Cancel delegation on scheduled posts list
+    els.schedContent.addEventListener('click', e => {
+      const editBtn = e.target.closest('[data-edit-sched]');
+      const cancelBtn = e.target.closest('[data-cancel-sched]');
+      if (editBtn) editScheduleEntry(editBtn.dataset.editSched);
+      if (cancelBtn) cancelSchedule(cancelBtn.dataset.cancelSched);
+    });
+
+    // Segmented view buttons return to library
+    els.grid1Btn.addEventListener('click', () => { showLibraryView('grid1'); render(); });
+    els.grid2Btn.addEventListener('click', () => { showLibraryView('grid2'); render(); });
+    els.listBtn.addEventListener('click', () => { showLibraryView('list'); render(); });
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
     setTimeout(closeWelcome, 3000);
+
+    // Check schedules every 30 seconds
+    setInterval(checkSchedules, 30000);
 
     els.applyEvent.addEventListener('click', () => {
       if (!els.quickTitle.value.trim()) return showToast('Add an event name first.');
@@ -1398,8 +1779,9 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(
       const btn = e.target.closest('[data-drawer-action]');
       if (!btn) return;
       const action = btn.dataset.drawerAction;
-      if (action === 'ready')   els.statusFilter.value = 'ready';
-      if (action === 'posted')  els.statusFilter.value = 'posted';
+      if (action === 'scheduled') { showScheduledView(); closeDrawer(); return; }
+      if (action === 'ready')   { els.statusFilter.value = 'ready'; view = 'grid2'; }
+      if (action === 'posted')  { els.statusFilter.value = 'posted'; view = 'grid2'; }
       render();
       closeDrawer();
     });
@@ -1425,6 +1807,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(
     openDb().then(database => {
       db = database;
       refresh();
+      checkSchedules();
     }).catch(() => {
       els.content.innerHTML = '<div class="empty"><div><strong>Storage unavailable</strong><p>Please open this in a modern browser.</p></div></div>';
     });
