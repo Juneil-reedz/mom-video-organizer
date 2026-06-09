@@ -1191,6 +1191,7 @@
       aspect-ratio: .74 / 1;
       transform-style: preserve-3d;
       filter: drop-shadow(0 32px 46px rgba(106,64,31,.26));
+      pointer-events: none;
     }
 
     .front-book-wrap::before,
@@ -1202,6 +1203,7 @@
       background: rgba(255,255,255,.58);
       border: 1px solid rgba(217,147,0,.2);
       transform: translateZ(-14px) rotateY(-6deg);
+      pointer-events: none;
     }
 
     .front-book-wrap::after {
@@ -1230,6 +1232,9 @@
         inset -5px 0 16px rgba(255,255,255,.42);
       transition: transform .9s cubic-bezier(.645,.045,.355,1), filter .25s ease;
       -webkit-tap-highlight-color: transparent;
+      z-index: 2;
+      pointer-events: auto;
+      touch-action: manipulation;
     }
 
     .front-cover::before {
@@ -1305,6 +1310,7 @@
       color: var(--brown);
       font-weight: 900;
       box-shadow: 0 10px 24px rgba(106,64,31,.12);
+      pointer-events: none;
     }
 
     /* ─── Album View ─── */
@@ -3527,6 +3533,8 @@
     }, 850);
   }
   frontCoverBtn?.addEventListener('click', openFrontPage);
+  frontCoverBtn?.addEventListener('pointerup', openFrontPage);
+  frontPage?.addEventListener('click', openFrontPage);
   els.clearSelection?.addEventListener('click', () => { state.selected = []; render(); });
 
   /* Add Photos button in preview card header */
