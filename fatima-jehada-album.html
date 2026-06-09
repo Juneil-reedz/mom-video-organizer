@@ -1457,6 +1457,7 @@
       transform-style: preserve-3d;
       transform: translateZ(0);
       -webkit-transform: translateZ(0);
+      isolation: isolate;
     }
 
     /* Stack depth illusion */
@@ -1479,10 +1480,12 @@
     .bpage-under {
       z-index: 3;
       box-shadow: inset 8px 0 18px rgba(106,64,31,.07);
+      transform: translateZ(.4px);
     }
 
     .bpage-current {
       z-index: 4;
+      transform: translateZ(1px);
       box-shadow:
         inset 7px 0 22px rgba(106,64,31,.10),
         0 22px 56px rgba(106,64,31,.20);
@@ -1506,38 +1509,39 @@
       transform-style: preserve-3d;
       z-index: 6;
       pointer-events: none;
-      will-change: transform, opacity, filter;
+      will-change: transform, filter;
       opacity: 0;
       visibility: hidden;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
+      filter: drop-shadow(0 22px 26px rgba(106,64,31,.16));
     }
 
     .bpage-flip.flipping-next {
       opacity: 1;
       visibility: visible;
-      animation: flipToNext3d .72s cubic-bezier(.645,.045,.355,1) forwards;
+      animation: flipToNext3d .92s cubic-bezier(.2,.74,.2,1) forwards;
     }
 
     .bpage-flip.flipping-prev {
       opacity: 1;
       visibility: visible;
       transform-origin: right center;
-      animation: flipToPrev3d .72s cubic-bezier(.645,.045,.355,1) forwards;
+      animation: flipToPrev3d .92s cubic-bezier(.2,.74,.2,1) forwards;
     }
 
     @keyframes flipToNext3d {
-      0%   { transform: perspective(1300px) rotateY(0deg) translateZ(1px); opacity: 1; filter: brightness(1); }
-      46%  { transform: perspective(1300px) rotateY(-74deg) translateZ(18px); opacity: .98; filter: brightness(.96); }
-      78%  { transform: perspective(1300px) rotateY(-126deg) translateZ(10px); opacity: .72; filter: brightness(.9); }
-      100% { transform: perspective(1300px) rotateY(-158deg) translateZ(0); opacity: 0; filter: brightness(.86); }
+      0%   { transform: rotateY(0deg) translateZ(9px); filter: brightness(1) drop-shadow(0 20px 22px rgba(106,64,31,.14)); }
+      38%  { transform: rotateY(-54deg) translateZ(32px) translateX(-1px); filter: brightness(.98) drop-shadow(12px 22px 28px rgba(106,64,31,.18)); }
+      68%  { transform: rotateY(-118deg) translateZ(28px) translateX(-2px); filter: brightness(.94) drop-shadow(20px 24px 30px rgba(106,64,31,.14)); }
+      100% { transform: rotateY(-179.6deg) translateZ(7px); filter: brightness(.96) drop-shadow(0 12px 18px rgba(106,64,31,.08)); }
     }
 
     @keyframes flipToPrev3d {
-      0%   { transform: perspective(1300px) rotateY(0deg) translateZ(1px); opacity: 1; filter: brightness(1); }
-      46%  { transform: perspective(1300px) rotateY(74deg) translateZ(18px); opacity: .98; filter: brightness(.96); }
-      78%  { transform: perspective(1300px) rotateY(126deg) translateZ(10px); opacity: .72; filter: brightness(.9); }
-      100% { transform: perspective(1300px) rotateY(158deg) translateZ(0); opacity: 0; filter: brightness(.86); }
+      0%   { transform: rotateY(0deg) translateZ(9px); filter: brightness(1) drop-shadow(0 20px 22px rgba(106,64,31,.14)); }
+      38%  { transform: rotateY(54deg) translateZ(32px) translateX(1px); filter: brightness(.98) drop-shadow(-12px 22px 28px rgba(106,64,31,.18)); }
+      68%  { transform: rotateY(118deg) translateZ(28px) translateX(2px); filter: brightness(.94) drop-shadow(-20px 24px 30px rgba(106,64,31,.14)); }
+      100% { transform: rotateY(179.6deg) translateZ(7px); filter: brightness(.96) drop-shadow(0 12px 18px rgba(106,64,31,.08)); }
     }
 
     .bpage-flip-face {
@@ -1545,14 +1549,19 @@
       inset: 0;
       border-radius: 22px 30px 30px 22px;
       overflow: hidden;
-      transform: translateZ(.5px);
+      transform: translateZ(1px);
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
       box-shadow: 0 18px 32px rgba(106,64,31,.18);
+      background: #fffaf0;
     }
 
     .bpage-flip-back {
-      display: none;
+      display: block;
+      transform: rotateY(180deg) translateZ(1px);
+      box-shadow:
+        inset -10px 0 18px rgba(106,64,31,.12),
+        0 18px 32px rgba(106,64,31,.12);
     }
 
     /* Lighting gradient – darkens at the fold edge */
@@ -1562,13 +1571,27 @@
       border-radius: 22px 30px 30px 22px;
       pointer-events: none;
       z-index: 2;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transform: translateZ(2px);
       background:
         linear-gradient(to left, rgba(106,64,31,.0) 0%, rgba(106,64,31,.20) 86%, rgba(106,64,31,.44) 100%),
         linear-gradient(to right, rgba(255,255,255,.34), transparent 42%);
     }
 
     .bpage-flip-light-back {
-      display: none;
+      display: block;
+      position: absolute;
+      inset: 0;
+      border-radius: 22px 30px 30px 22px;
+      pointer-events: none;
+      z-index: 2;
+      transform: rotateY(180deg) translateZ(2px);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      background:
+        linear-gradient(to right, rgba(106,64,31,.0) 0%, rgba(106,64,31,.15) 82%, rgba(106,64,31,.34) 100%),
+        linear-gradient(to left, rgba(255,255,255,.24), transparent 44%);
     }
 
     /* Shadow cast on the under-page as flip lifts */
@@ -1583,14 +1606,14 @@
 
     .flipping-next .bpage-flip-shadow,
     .flipping-prev .bpage-flip-shadow {
-      animation: shadowPulse .72s ease-in-out forwards;
+      animation: shadowPulse .92s ease-in-out forwards;
     }
 
     @keyframes shadowPulse {
-      0%   { opacity: 0; background: linear-gradient(to right, rgba(106,64,31,.32) 0%, transparent 55%); }
-      40%  { opacity: 1; }
-      60%  { opacity: 1; }
-      100% { opacity: 0; background: linear-gradient(to right, rgba(106,64,31,.32) 0%, transparent 55%); }
+      0%   { opacity: 0; background: linear-gradient(to right, rgba(106,64,31,.28) 0%, transparent 58%); }
+      44%  { opacity: .95; }
+      72%  { opacity: .55; }
+      100% { opacity: 0; background: linear-gradient(to right, rgba(106,64,31,.18) 0%, transparent 62%); }
     }
 
     /* Corner tap areas */
@@ -3327,19 +3350,20 @@
     void flipEl.offsetWidth;
     flipEl.style.animation = '';
 
-    /* Pre-populate one 3D moving page over the destination page.
-       Keeping only one visible face avoids the old mobile Safari flicker. */
+    /* Pre-populate the destination before the 3D sheet moves.
+       The visible current layer already becomes the next page, while the
+       animated leaf covers it with the old page until the turn finishes. */
     if (direction === 'next') {
       fillPage(flipFront, pages[oldIndex]);   /* departing page on front */
-      flipBack.innerHTML = '';
-      fillPage(under,     pages[newIndex]);   /* revealed under the peel */
-      fillPage(current,   pages[oldIndex]);
+      fillPage(flipBack,  pages[newIndex]);   /* soft paper back during turn */
+      fillPage(under,     pages[newIndex]);   /* backup reveal layer */
+      fillPage(current,   pages[newIndex]);   /* destination is ready immediately */
       flipEl.className = 'bpage-flip flipping-next';
     } else {
       fillPage(flipFront, pages[oldIndex]);   /* departing page slides right */
-      flipBack.innerHTML = '';
-      fillPage(under,     pages[newIndex]);   /* under shows destination */
-      fillPage(current,   pages[oldIndex]);
+      fillPage(flipBack,  pages[newIndex]);   /* soft paper back during turn */
+      fillPage(under,     pages[newIndex]);   /* backup reveal layer */
+      fillPage(current,   pages[newIndex]);   /* destination is ready immediately */
       flipEl.className = 'bpage-flip flipping-prev';
     }
 
