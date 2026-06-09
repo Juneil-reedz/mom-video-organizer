@@ -2481,7 +2481,7 @@
   <div class="crop-controls">
     <div class="crop-ctrl-row">
       <span class="crop-ctrl-label">🔍 Zoom</span>
-      <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1">
+      <input type="range" id="cropZoom" min="0.55" max="3" step="0.01" value="1">
       <button class="crop-reset-btn" id="cropReset" type="button">Reset</button>
     </div>
   </div>
@@ -2801,8 +2801,8 @@
           didPan = true;
           const W = slot.offsetWidth || 1, H = slot.offsetHeight || 1;
           /* Invert direction: drag right → photo moves right → x decreases */
-          const zoom = Math.max(1.45, Number(cropBase.zoom || 1));
-          const sensitivity = 125 / zoom;
+          const zoom = Number(cropBase.zoom || 1);
+          const sensitivity = 125 / Math.max(zoom, .75);
           const nx = Math.max(0, Math.min(100, cropBase.x - (dx / W) * sensitivity));
           const ny = Math.max(0, Math.min(100, cropBase.y - (dy / H) * sensitivity));
           img.style.setProperty('--img-x', `${nx}%`);
@@ -3285,7 +3285,7 @@
       const pad = frameStyle === 'none' ? 0 : 18;
       if (chosen[i]) {
         const img = await imageFromSrc(chosen[i].data);
-        drawCoverImage(ctx, img, x+pad, y+pad, w-pad*2, h-pad*2, 18);
+        drawCoverImage(ctx, img, x+pad, y+pad, w-pad*2, h-pad*2, 18, state.crops[chosen[i].id]);
         const caption = captions[chosen[i].id] || defaultCaption();
         if (caption.text) drawCaption(ctx, caption, x+pad, y+pad, w-pad*2, h-pad*2);
         if (caption.sticker) drawSticker(ctx, caption, x+pad, y+pad, w-pad*2, h-pad*2);
@@ -3320,11 +3320,18 @@
     ctx.font = '64px serif'; ctx.textAlign = 'center'; ctx.fillText(caption.sticker, sx, sy + 22);
   }
 
-  function drawCoverImage(ctx, img, x, y, w, h, radius) {
-    const ratio = Math.max(w/img.width, h/img.height);
-    const sw = w/ratio, sh = h/ratio, sx = (img.width-sw)/2, sy = (img.height-sh)/2;
+  function drawCoverImage(ctx, img, x, y, w, h, radius, crop = { x: 50, y: 50, zoom: 1 }) {
+    const zoom = Number(crop.zoom || 1);
+    const ratio = Math.max(w / img.width, h / img.height) * zoom;
+    const dw = img.width * ratio;
+    const dh = img.height * ratio;
+    const dx = x + (w - dw) * ((crop.x ?? 50) / 100);
+    const dy = y + (h - dh) * ((crop.y ?? 50) / 100);
     ctx.save(); roundRect(ctx, x, y, w, h, radius); ctx.clip();
-    ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h); ctx.restore();
+    ctx.fillStyle = 'rgba(255,250,240,.72)';
+    ctx.fillRect(x, y, w, h);
+    ctx.drawImage(img, dx, dy, dw, dh);
+    ctx.restore();
   }
 
   function roundRect(ctx, x, y, w, h, r) {
@@ -3542,7 +3549,7 @@
     frame.addEventListener('touchmove', e => {
       if (e.touches.length === 2 && pinchDist0 !== null) {
         const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-        workingCrop.zoom = Math.max(1, Math.min(3, pinchZoom0 * (dist / pinchDist0)));
+        workingCrop.zoom = Math.max(.55, Math.min(3, pinchZoom0 * (dist / pinchDist0)));
         applyCropToPreview();
       }
     }, { passive: true });
