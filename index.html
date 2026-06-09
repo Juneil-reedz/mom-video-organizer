@@ -573,7 +573,7 @@
     .sched-pbadge { font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; background: var(--soft); color: var(--purple); }
     .sched-sbadge { font-size: .74rem; font-weight: 800; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
     .sched-sbadge.pending  { background: #fff0bd; color: #7a5800; }
-    .sched-sbadge.triggered { background: #e0f7e9; color: #1a6b3c; }
+    .sched-sbadge.triggered { background: #dbeafe; color: #1e40af; }
     .sched-sbadge.cancelled { background: #ffeef2; color: var(--coral); }
     .sched-caption { font-size: .82rem; color: var(--muted); white-space: pre-wrap; word-break: break-word; background: var(--soft); border-radius: 8px; padding: 8px 10px; }
     .sched-footer { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -1220,6 +1220,9 @@
           </label>
         </div>
       </div>
+      <p style="margin:0 22px 4px;font-size:.78rem;color:var(--muted);background:var(--gold-soft);border-radius:8px;padding:8px 12px;line-height:1.5">
+        ⚠️ <strong>Important:</strong> At the scheduled time, this app will open Facebook for you. You will still need to <strong>tap Post inside Facebook</strong> to publish — the app cannot post on your behalf.
+      </p>
       <div class="modal-actions">
         <button class="button secondary" value="cancel" type="submit">Cancel</button>
         <button class="button" id="saveSchedBtn" value="default" type="button">Save Schedule</button>
@@ -1854,7 +1857,7 @@
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({ files: [file], title: video.title, text: caption });
-          showToast('Shared! Choose your platform to finish posting.');
+          showToast('Video sent to share sheet — pick Facebook and tap Post to finish!');
           return;
         } catch (e) { if (e.name === 'AbortError') return; }
       }
@@ -1871,7 +1874,7 @@
       };
       const first = s.platforms[0];
       if (first && platformUrls[first]) window.open(platformUrls[first], '_blank');
-      showToast('Caption copied. Paste it when you post!');
+      showToast('Facebook opened — choose your video, paste the caption, then tap Post.');
     }
 
     let countdownInterval = null;
@@ -1928,7 +1931,7 @@
         const card = document.createElement('div');
         card.className = 'sched-card';
         const isPending = s.status === 'pending';
-        const statusLabel = { pending: 'Pending', triggered: 'Posted', cancelled: 'Cancelled' }[s.status] || s.status;
+        const statusLabel = { pending: '⏳ Pending', triggered: '📲 Opened — tap Post in Facebook', cancelled: '✕ Cancelled' }[s.status] || s.status;
         card.innerHTML = `
           <div class="sched-card-head">
             ${s.videoThumb ? `<img class="sched-thumb" src="${s.videoThumb}" alt="">` : `<div class="sched-thumb-placeholder"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21"/></svg></div>`}
