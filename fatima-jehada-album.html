@@ -447,9 +447,10 @@
 
     .book-caption {
       position: absolute;
-      left: 7px;
-      right: 7px;
-      bottom: 7px;
+      left: var(--caption-x, 50%);
+      top: var(--caption-y, 86%);
+      transform: translate(-50%, -50%);
+      width: 86%;
       padding: 5px 7px;
       border-radius: 8px;
       background: rgba(255, 250, 240, .84);
@@ -459,6 +460,15 @@
       font-size: .78rem;
       text-align: center;
       overflow-wrap: anywhere;
+    }
+
+    .book-sticker {
+      position: absolute;
+      left: var(--sticker-x, 84%);
+      top: var(--sticker-y, 18%);
+      transform: translate(-50%, -50%);
+      font-size: 1.65rem;
+      filter: drop-shadow(0 6px 8px rgba(106, 64, 31, .16));
     }
 
     .book-note {
@@ -608,9 +618,10 @@
 
     .photo-caption {
       position: absolute;
-      left: 10px;
-      right: 10px;
-      bottom: 10px;
+      left: var(--caption-x, 50%);
+      top: var(--caption-y, 86%);
+      transform: translate(-50%, -50%);
+      width: min(88%, 360px);
       min-height: 34px;
       display: grid;
       place-items: center;
@@ -625,6 +636,23 @@
       line-height: 1.1;
       text-shadow: 0 1px 0 rgba(255, 255, 255, .55);
       overflow-wrap: anywhere;
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
+      z-index: 2;
+    }
+
+    .photo-sticker {
+      position: absolute;
+      left: var(--sticker-x, 84%);
+      top: var(--sticker-y, 18%);
+      transform: translate(-50%, -50%);
+      font-size: clamp(1.6rem, 4vw, 3rem);
+      filter: drop-shadow(0 8px 10px rgba(106, 64, 31, .18));
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
+      z-index: 3;
     }
 
     .caption-designer {
@@ -635,7 +663,7 @@
 
     .caption-row {
       display: grid;
-      grid-template-columns: 1fr .78fr 70px;
+      grid-template-columns: 1fr .72fr 70px;
       gap: 8px;
       align-items: end;
       padding: 10px;
@@ -1063,7 +1091,16 @@
     }
 
     function defaultCaption() {
-      return { text: '', font: 'Nunito', color: '#6a401f' };
+      return {
+        text: '',
+        font: 'Nunito',
+        color: '#6a401f',
+        x: 50,
+        y: 86,
+        sticker: '',
+        stickerX: 84,
+        stickerY: 18
+      };
     }
 
     function applyPageStyle(settings) {
@@ -1118,15 +1155,73 @@
             const cap = document.createElement('div');
             cap.className = 'photo-caption';
             cap.textContent = caption.text;
+            cap.dataset.photoId = chosen[i].id;
+            cap.dataset.dragType = 'caption';
             cap.style.setProperty('--caption-color', caption.color);
             cap.style.setProperty('--caption-font', fontFamily(caption.font));
+            cap.style.setProperty('--caption-x', `${caption.x ?? 50}%`);
+            cap.style.setProperty('--caption-y', `${caption.y ?? 86}%`);
             slot.append(cap);
+          }
+          if (caption.sticker) {
+            const sticker = document.createElement('div');
+            sticker.className = 'photo-sticker';
+            sticker.textContent = caption.sticker;
+            sticker.dataset.photoId = chosen[i].id;
+            sticker.dataset.dragType = 'sticker';
+            sticker.style.setProperty('--sticker-x', `${caption.stickerX ?? 84}%`);
+            sticker.style.setProperty('--sticker-y', `${caption.stickerY ?? 18}%`);
+            slot.append(sticker);
           }
         } else {
           slot.textContent = `Photo ${i + 1}`;
         }
         els.photoLayout.append(slot);
       }
+      wireOverlayDragging();
+    }
+
+    function wireOverlayDragging() {
+      els.photoLayout.querySelectorAll('.photo-caption, .photo-sticker').forEach(overlay => {
+        overlay.addEventListener('pointerdown', startOverlayDrag);
+      });
+    }
+
+    function startOverlayDrag(event) {
+      event.preventDefault();
+      const overlay = event.currentTarget;
+      const slot = overlay.closest('.slot');
+      if (!slot) return;
+      overlay.setPointerCapture(event.pointerId);
+      const move = moveEvent => {
+        const rect = slot.getBoundingClientRect();
+        const x = Math.min(92, Math.max(8, ((moveEvent.clientX - rect.left) / rect.width) * 100));
+        const y = Math.min(92, Math.max(8, ((moveEvent.clientY - rect.top) / rect.height) * 100));
+        const id = overlay.dataset.photoId;
+        state.captions[id] = state.captions[id] || defaultCaption();
+        if (overlay.dataset.dragType === 'caption') {
+          state.captions[id].x = Math.round(x);
+          state.captions[id].y = Math.round(y);
+          overlay.style.setProperty('--caption-x', `${state.captions[id].x}%`);
+          overlay.style.setProperty('--caption-y', `${state.captions[id].y}%`);
+        } else {
+          state.captions[id].stickerX = Math.round(x);
+          state.captions[id].stickerY = Math.round(y);
+          overlay.style.setProperty('--sticker-x', `${state.captions[id].stickerX}%`);
+          overlay.style.setProperty('--sticker-y', `${state.captions[id].stickerY}%`);
+        }
+      };
+      const up = () => {
+        overlay.removeEventListener('pointermove', move);
+        overlay.removeEventListener('pointerup', up);
+        overlay.removeEventListener('pointercancel', up);
+        persist();
+        renderCaptionDesigner();
+        renderBook();
+      };
+      overlay.addEventListener('pointermove', move);
+      overlay.addEventListener('pointerup', up);
+      overlay.addEventListener('pointercancel', up);
     }
 
     function fontFamily(font) {
@@ -1161,12 +1256,27 @@
             <option>Cute</option>
             <option>Bold</option>
           </select></label>
-          <label>Color<input data-field="color" type="color" value="${caption.color || '#6a401f'}"></label>`;
+          <label>Color<input data-field="color" type="color" value="${caption.color || '#6a401f'}"></label>
+          <label>Sticker<select data-field="sticker">
+            <option value="">None</option>
+            <option value="🌻">Sunflower</option>
+            <option value="💗">Pink Heart</option>
+            <option value="✨">Sparkle</option>
+            <option value="🎀">Ribbon</option>
+            <option value="🦋">Butterfly</option>
+            <option value="👑">Crown</option>
+          </select></label>
+          <label>Caption X<input data-field="x" type="range" min="8" max="92" value="${caption.x ?? 50}"></label>
+          <label>Caption Y<input data-field="y" type="range" min="8" max="92" value="${caption.y ?? 86}"></label>
+          <label>Sticker X<input data-field="stickerX" type="range" min="8" max="92" value="${caption.stickerX ?? 84}"></label>
+          <label>Sticker Y<input data-field="stickerY" type="range" min="8" max="92" value="${caption.stickerY ?? 18}"></label>`;
         row.querySelector('[data-field="font"]').value = caption.font || 'Nunito';
+        row.querySelector('[data-field="sticker"]').value = caption.sticker || '';
         row.querySelectorAll('[data-field]').forEach(input => {
           input.addEventListener('input', () => {
             state.captions[id] = state.captions[id] || defaultCaption();
-            state.captions[id][input.dataset.field] = input.value;
+            const numeric = ['x', 'y', 'stickerX', 'stickerY'].includes(input.dataset.field);
+            state.captions[id][input.dataset.field] = numeric ? Number(input.value) : input.value;
             persist();
             renderPreview();
           });
@@ -1292,7 +1402,7 @@
       const captions = page.captions || {};
       const photos = selected.map(photo => {
         const cap = captions[photo.id] || defaultCaption();
-        return `<div class="book-photo"><img src="${photo.data}" alt="">${cap.text ? `<div class="book-caption" style="--caption-color:${cap.color};--caption-font:${fontFamily(cap.font)}">${escapeHtml(cap.text)}</div>` : ''}</div>`;
+        return `<div class="book-photo"><img src="${photo.data}" alt="">${cap.text ? `<div class="book-caption" style="--caption-color:${cap.color};--caption-font:${fontFamily(cap.font)};--caption-x:${cap.x ?? 50}%;--caption-y:${cap.y ?? 86}%">${escapeHtml(cap.text)}</div>` : ''}${cap.sticker ? `<div class="book-sticker" style="--sticker-x:${cap.stickerX ?? 84}%;--sticker-y:${cap.stickerY ?? 18}%">${escapeHtml(cap.sticker)}</div>` : ''}</div>`;
       }).join('');
       const blanks = Array.from({ length: Math.max(0, 4 - selected.length) }, (_, i) => `<div class="book-photo"><div class="empty">Photo ${selected.length + i + 1}</div></div>`).join('');
       target.innerHTML = `
@@ -1388,7 +1498,8 @@
           const img = await imageFromSrc(chosen[i].data);
           drawCoverImage(ctx, img, x + pad, y + pad, w - pad * 2, h - pad * 2, 18);
           const caption = captions[chosen[i].id] || defaultCaption();
-          if (caption.text) drawCaption(ctx, caption, x + pad + 16, y + h - 82, w - pad * 2 - 32, 46);
+          if (caption.text) drawCaption(ctx, caption, x + pad, y + pad, w - pad * 2, h - pad * 2);
+          if (caption.sticker) drawSticker(ctx, caption, x + pad, y + pad, w - pad * 2, h - pad * 2);
         } else {
           ctx.fillStyle = 'rgba(255,255,255,.62)';
           roundRect(ctx, x + pad, y + pad, w - pad * 2, h - pad * 2, 18);
@@ -1422,14 +1533,28 @@
     }
 
     function drawCaption(ctx, caption, x, y, w, h) {
+      const cx = x + w * ((caption.x ?? 50) / 100);
+      const cy = y + h * ((caption.y ?? 86) / 100);
+      const boxW = Math.min(w * .86, 360);
+      const boxH = 46;
+      const bx = cx - boxW / 2;
+      const by = cy - boxH / 2;
       ctx.fillStyle = 'rgba(255, 250, 240, .86)';
-      roundRect(ctx, x, y, w, h, 16);
+      roundRect(ctx, bx, by, boxW, boxH, 16);
       ctx.fill();
       ctx.fillStyle = caption.color || '#6a401f';
       const font = caption.font === 'Playfair' ? 'Georgia' : caption.font === 'Cursive' ? 'Segoe Script' : caption.font === 'Cute' ? 'Comic Sans MS' : caption.font === 'Bold' ? 'Impact' : 'Nunito, Arial';
       ctx.font = `900 26px ${font}`;
       ctx.textAlign = 'center';
-      ctx.fillText(caption.text, x + w / 2, y + 31, w - 24);
+      ctx.fillText(caption.text, cx, cy + 9, boxW - 24);
+    }
+
+    function drawSticker(ctx, caption, x, y, w, h) {
+      const sx = x + w * ((caption.stickerX ?? 84) / 100);
+      const sy = y + h * ((caption.stickerY ?? 18) / 100);
+      ctx.font = '64px serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(caption.sticker, sx, sy + 22);
     }
 
     function drawCoverImage(ctx, img, x, y, w, h, radius) {
