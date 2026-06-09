@@ -890,7 +890,13 @@
     }
 
     /* ─── Tappable photo slot ─── */
-    .slot.has-photo { cursor: pointer; }
+    .slot.has-photo {
+      cursor: grab;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .slot.has-photo:active { cursor: grabbing; }
     .slot.has-photo::after {
       content: "✏️";
       position: absolute;
@@ -2728,6 +2734,8 @@
 
         slot.addEventListener('pointerdown', e => {
           if (e.target.closest('.photo-caption, .photo-sticker')) return;
+          e.preventDefault();
+          slot.setPointerCapture?.(e.pointerId);
           panStart = { x: e.clientX, y: e.clientY };
           cropBase = { ...(state.crops[_id] || { x: 50, y: 50, zoom: 1 }) };
           didPan = false;
@@ -2735,6 +2743,7 @@
 
         slot.addEventListener('pointermove', e => {
           if (!panStart) return;
+          e.preventDefault();
           const dx = e.clientX - panStart.x;
           const dy = e.clientY - panStart.y;
           if (!didPan && Math.abs(dx) + Math.abs(dy) < 5) return;
@@ -2743,9 +2752,11 @@
           /* Invert direction: drag right → photo moves right → x decreases */
           const nx = Math.max(0, Math.min(100, cropBase.x - (dx / W) * 90));
           const ny = Math.max(0, Math.min(100, cropBase.y - (dy / H) * 90));
+          const zoom = Math.max(1.08, Number(cropBase.zoom || 1));
           img.style.setProperty('--img-x', `${nx}%`);
           img.style.setProperty('--img-y', `${ny}%`);
-          state.crops[_id] = { ...(state.crops[_id] || cropBase), x: nx, y: ny };
+          img.style.setProperty('--img-zoom', zoom);
+          state.crops[_id] = { ...(state.crops[_id] || cropBase), x: nx, y: ny, zoom };
         });
 
         slot.addEventListener('pointerup', () => {
