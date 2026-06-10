@@ -632,9 +632,9 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      object-position: var(--img-x, 50%) var(--img-y, 50%);
-      transform: scale(var(--img-zoom, 1));
-      transform-origin: var(--img-x, 50%) var(--img-y, 50%);
+      object-position: center;
+      transform: scale(var(--img-zoom, 1.5)) translate(var(--img-tx, 0%), var(--img-ty, 0%));
+      transform-origin: center;
       display: block;
       transition: transform .15s ease;
     }
@@ -768,9 +768,9 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      object-position: var(--img-x, 50%) var(--img-y, 50%);
-      transform: scale(var(--img-zoom, 1));
-      transform-origin: var(--img-x, 50%) var(--img-y, 50%);
+      object-position: center;
+      transform: scale(var(--img-zoom, 1.5)) translate(var(--img-tx, 0%), var(--img-ty, 0%));
+      transform-origin: center;
       display: block;
       pointer-events: none;
     }
@@ -3197,9 +3197,15 @@
     };
   }
 
+  function normalizeCrop(cr) {
+    if (!cr) return { tx: 0, ty: 0, zoom: 1.5 };
+    if ('tx' in cr) return cr;
+    return { tx: 0, ty: 0, zoom: cr.zoom || 1.5 };
+  }
+
   function cropSettings() {
     const out = {};
-    state.selected.forEach(id => { if (id) out[id] = state.crops[id] || { x: 50, y: 50, zoom: 1 }; });
+    state.selected.forEach(id => { if (id) out[id] = normalizeCrop(state.crops[id]); });
     return out;
   }
 
@@ -3264,10 +3270,10 @@
         const img = document.createElement('img');
         img.src = photo.data;
         img.alt = photo.name;
-        const crop = state.crops[photo.id] || { x: 50, y: 50, zoom: 1 };
-        img.style.setProperty('--img-x', `${crop.x}%`);
-        img.style.setProperty('--img-y', `${crop.y}%`);
-        img.style.setProperty('--img-zoom', crop.zoom);
+        const crop = normalizeCrop(state.crops[photo.id]);
+        img.style.setProperty('--img-tx', `${crop.tx || 0}%`);
+        img.style.setProperty('--img-ty', `${crop.ty || 0}%`);
+        img.style.setProperty('--img-zoom', crop.zoom || 1.5);
         slot.append(img);
         const caption = (state.captions[photo.id]) || defaultCaption();
         if (caption.text) {
@@ -3309,9 +3315,9 @@
           e.preventDefault();
           slot.setPointerCapture?.(e.pointerId);
           activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-          cropBase = { ...(state.crops[_id] || { x: 50, y: 50, zoom: 1 }) };
+          cropBase = normalizeCrop(state.crops[_id]);
           if (activePointers.size >= 2) {
-            pinchStart = { distance: pointerDistance() || 1, zoom: Number(cropBase.zoom || 1) };
+            pinchStart = { distance: pointerDistance() || 1, zoom: Number(cropBase.zoom || 1.5) };
             panStart = null;
             didPan = true;
             didPinch = true;
@@ -3330,9 +3336,9 @@
           if (activePointers.size >= 2 && pinchStart) {
             didPan = true;
             didPinch = true;
-            const zoom = Math.max(.55, Math.min(3, pinchStart.zoom * (pointerDistance() / pinchStart.distance)));
+            const zoom = Math.max(.8, Math.min(3, pinchStart.zoom * (pointerDistance() / pinchStart.distance)));
             img.style.setProperty('--img-zoom', zoom);
-            state.crops[_id] = { ...(state.crops[_id] || cropBase), zoom };
+            state.crops[_id] = { ...normalizeCrop(state.crops[_id]), zoom };
             return;
           }
           if (!panStart) return;
@@ -3341,15 +3347,13 @@
           if (!didPan && Math.abs(dx) + Math.abs(dy) < 5) return;
           didPan = true;
           const W = slot.offsetWidth || 1, H = slot.offsetHeight || 1;
-          /* Invert direction: drag right → photo moves right → x decreases */
-          const zoom = Number(cropBase.zoom || 1);
-          const sensitivity = 125 / Math.max(zoom, .75);
-          const nx = Math.max(0, Math.min(100, cropBase.x - (dx / W) * sensitivity));
-          const ny = Math.max(0, Math.min(100, cropBase.y - (dy / H) * sensitivity));
-          img.style.setProperty('--img-x', `${nx}%`);
-          img.style.setProperty('--img-y', `${ny}%`);
+          const zoom = Number(cropBase.zoom || 1.5);
+          const ntx = Math.max(-40, Math.min(40, (cropBase.tx || 0) - (dx / W) * 40));
+          const nty = Math.max(-40, Math.min(40, (cropBase.ty || 0) - (dy / H) * 40));
+          img.style.setProperty('--img-tx', `${ntx}%`);
+          img.style.setProperty('--img-ty', `${nty}%`);
           img.style.setProperty('--img-zoom', zoom);
-          state.crops[_id] = { ...(state.crops[_id] || cropBase), x: nx, y: ny, zoom };
+          state.crops[_id] = { tx: ntx, ty: nty, zoom };
         });
 
         const finishPointer = e => {
@@ -3359,7 +3363,7 @@
           if (activePointers.size === 1) {
             const pt = [...activePointers.values()][0];
             panStart = { x: pt.x, y: pt.y };
-            cropBase = { ...(state.crops[_id] || { x: 50, y: 50, zoom: 1 }) };
+            cropBase = normalizeCrop(state.crops[_id]);
           } else {
             panStart = null;
             pinchStart = null;
@@ -3821,14 +3825,14 @@
       const photo = id ? state.photos.find(p => p.id === id) : null;
       if (photo) {
         const cap = captions[photo.id] || defaultCaption();
-        const cr = savedCrops[photo.id] || state.crops[photo.id] || { x: 50, y: 50, zoom: 1 };
+        const cr = normalizeCrop(savedCrops[photo.id] || state.crops[photo.id]);
         const capEl = cap.text
           ? `<div class="photo-caption" style="--caption-color:${cap.color};--caption-font:${fontFamily(cap.font)};--caption-x:${cap.x??50}%;--caption-y:${cap.y??86}%">${escapeHtml(cap.text)}</div>`
           : '';
         const stickerEl = cap.sticker
           ? `<div class="photo-sticker" style="--sticker-x:${cap.stickerX??84}%;--sticker-y:${cap.stickerY??18}%">${escapeHtml(cap.sticker)}</div>`
           : '';
-        slotsHTML += `<div class="slot"><img src="${photo.data}" alt="" loading="lazy" style="--img-x:${cr.x}%;--img-y:${cr.y}%;--img-zoom:${cr.zoom}">${capEl}${stickerEl}</div>`;
+        slotsHTML += `<div class="slot"><img src="${photo.data}" alt="" loading="lazy" style="--img-tx:${cr.tx||0}%;--img-ty:${cr.ty||0}%;--img-zoom:${cr.zoom||1.5}">${capEl}${stickerEl}</div>`;
       } else {
         slotsHTML += `<div class="slot empty-slot" style="opacity:.45"></div>`;
       }
@@ -4200,20 +4204,20 @@
     const zoomSlider = document.querySelector('#cropZoom');
     const hint     = document.querySelector('#cropHint');
     let activePhotoId = null;
-    let workingCrop = { x: 50, y: 50, zoom: 1 };
+    let workingCrop = { tx: 0, ty: 0, zoom: 1.5 };
 
     function applyCropToPreview() {
-      previewImg.style.setProperty('--img-x', `${workingCrop.x}%`);
-      previewImg.style.setProperty('--img-y', `${workingCrop.y}%`);
-      previewImg.style.setProperty('--img-zoom', workingCrop.zoom);
-      zoomSlider.value = workingCrop.zoom;
+      previewImg.style.setProperty('--img-tx', `${workingCrop.tx || 0}%`);
+      previewImg.style.setProperty('--img-ty', `${workingCrop.ty || 0}%`);
+      previewImg.style.setProperty('--img-zoom', workingCrop.zoom || 1.5);
+      zoomSlider.value = workingCrop.zoom || 1.5;
     }
 
     window.openCropModal = function(photoId) {
       const photo = state.photos.find(p => p.id === photoId);
       if (!photo) return;
       activePhotoId = photoId;
-      workingCrop = Object.assign({ x: 50, y: 50, zoom: 1 }, state.crops[photoId]);
+      workingCrop = normalizeCrop(state.crops[photoId]);
       previewImg.src = photo.data;
       applyCropToPreview();
       modal.classList.remove('hidden');
@@ -4238,7 +4242,7 @@
     document.querySelector('#cropDone').addEventListener('click', () => closeCropModal(true));
     document.querySelector('#cropCancel').addEventListener('click', () => closeCropModal(false));
     document.querySelector('#cropReset').addEventListener('click', () => {
-      workingCrop = { x: 50, y: 50, zoom: 1 };
+      workingCrop = { tx: 0, ty: 0, zoom: 1.5 };
       applyCropToPreview();
       if (hint) { hint.style.opacity = '1'; setTimeout(() => { hint.style.opacity = '0'; }, 1800); }
     });
@@ -4267,10 +4271,10 @@
       const dx = e.clientX - lastPt.x;
       const dy = e.clientY - lastPt.y;
       lastPt = { x: e.clientX, y: e.clientY };
-      /* sensitivity: more zoom → slower drag (need finer control) */
-      const sensitivity = 30 / workingCrop.zoom;
-      workingCrop.x = Math.max(0, Math.min(100, workingCrop.x - dx / sensitivity));
-      workingCrop.y = Math.max(0, Math.min(100, workingCrop.y - dy / sensitivity));
+      const W = frame.offsetWidth || 200;
+      const H = frame.offsetHeight || 200;
+      workingCrop.tx = Math.max(-40, Math.min(40, (workingCrop.tx || 0) - (dx / W) * 40));
+      workingCrop.ty = Math.max(-40, Math.min(40, (workingCrop.ty || 0) - (dy / H) * 40));
       applyCropToPreview();
     });
 
