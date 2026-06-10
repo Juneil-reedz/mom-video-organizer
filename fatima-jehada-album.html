@@ -1227,6 +1227,7 @@
       place-items: center;
       border-radius: 24px 38px 38px 24px;
       border: 1px solid rgba(217,147,0,.42);
+      color: var(--brown);
       background:
         linear-gradient(100deg, rgba(106,64,31,.20) 0%, transparent 16%),
         radial-gradient(circle at 48% 22%, rgba(248,194,27,.38), transparent 30%),
@@ -1298,7 +1299,8 @@
     }
 
     .front-cover-content p {
-      color: var(--muted);
+      color: inherit;
+      opacity: .65;
       font-weight: 900;
       font-size: .9rem;
     }
@@ -1612,6 +1614,7 @@
       flex: 1;
       margin-left: 20px;
       border-radius: 18px 28px 28px 18px;
+      color: var(--brown);
       background:
         linear-gradient(100deg, rgba(106,64,31,.16) 0%, transparent 14%),
         radial-gradient(circle at 50% 22%, rgba(248,194,27,.34), transparent 32%),
@@ -1658,13 +1661,14 @@
 
     .cover-content h2 {
       font-family: var(--display);
-      color: var(--brown);
+      color: inherit;
       font-size: clamp(.95rem, 4vw, 1.4rem);
       line-height: 1;
     }
 
     .cover-content p {
-      color: var(--muted);
+      color: inherit;
+      opacity: .65;
       font-weight: 700;
       font-size: .72rem;
     }
@@ -3114,6 +3118,10 @@
     albumCoverSwatches: document.querySelector('#albumCoverSwatches'),
     albumCoverFont: document.querySelector('#albumCoverFont'),
     albumShelf: document.querySelector('#albumShelf'),
+    frontCover: document.querySelector('#frontCoverBtn'),
+    frontCoverTitle: document.querySelector('#frontCoverBtn h1'),
+    book3dCoverFace: document.querySelector('.book3d-cover-face'),
+    book3dCoverTitle: document.querySelector('#bookCoverTitle'),
     activeAlbumTitle: document.querySelector('#activeAlbumTitle'),
     bookCoverTitle: document.querySelector('#bookCoverTitle'),
     editCurrentPage: document.querySelector('#editCurrentPageBtn'),
@@ -3590,10 +3598,24 @@
     return `${count} page${count === 1 ? '' : 's'}`;
   }
 
+  function applyCoverTheme(album) {
+    const theme = COVER_THEMES.find(t => t.id === album.coverTheme) || COVER_THEMES[0];
+    const font  = album.coverFont || 'Playfair Display';
+    const bg = `
+      linear-gradient(100deg, rgba(0,0,0,.16) 0%, transparent 16%),
+      radial-gradient(circle at 48% 22%, rgba(255,255,255,.28), transparent 30%),
+      linear-gradient(135deg, ${theme.grad[0]} 0%, ${theme.grad[1]} 62%, ${theme.grad[2]} 100%)`;
+    if (els.frontCover)      els.frontCover.style.background = bg;
+    if (els.frontCoverTitle) { els.frontCoverTitle.style.fontFamily = `'${font}',serif`; els.frontCoverTitle.style.color = theme.text; }
+    if (els.book3dCoverFace) els.book3dCoverFace.style.background = bg;
+    if (els.book3dCoverTitle) { els.book3dCoverTitle.style.fontFamily = `'${font}',serif`; els.book3dCoverTitle.style.color = theme.text; }
+  }
+
   function renderAlbumShelf() {
     const album = activeAlbum();
     if (els.activeAlbumTitle) els.activeAlbumTitle.textContent = album.title;
     if (els.bookCoverTitle) els.bookCoverTitle.textContent = album.title;
+    applyCoverTheme(album);
     if (!els.albumShelf) return;
 
     els.albumShelf.innerHTML = '';
