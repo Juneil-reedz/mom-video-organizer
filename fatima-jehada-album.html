@@ -3064,6 +3064,8 @@
           id: album.id || (crypto.randomUUID ? crypto.randomUUID() : `album-${Date.now()}-${Math.random().toString(16).slice(2)}`),
           title: album.title || 'Fatima Album',
           pages: Array.isArray(album.pages) ? album.pages : [],
+          coverTheme: album.coverTheme || 'rose',
+          coverFont: album.coverFont || 'Playfair Display',
           createdAt: album.createdAt || Date.now(),
           updatedAt: album.updatedAt || Date.now()
         }))
