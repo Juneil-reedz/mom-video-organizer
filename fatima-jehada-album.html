@@ -1299,8 +1299,7 @@
     }
 
     .front-cover-content p {
-      color: inherit;
-      opacity: .65;
+      color: var(--muted);
       font-weight: 900;
       font-size: .9rem;
     }
@@ -3602,8 +3601,6 @@
       linear-gradient(100deg, rgba(0,0,0,.16) 0%, transparent 16%),
       radial-gradient(circle at 48% 22%, rgba(255,255,255,.28), transparent 30%),
       linear-gradient(135deg, ${theme.grad[0]} 0%, ${theme.grad[1]} 62%, ${theme.grad[2]} 100%)`;
-    if (els.frontCover)      els.frontCover.style.background = bg;
-    if (els.frontCoverTitle) { els.frontCoverTitle.style.fontFamily = `'${font}',serif`; els.frontCoverTitle.style.color = theme.text; }
     if (els.book3dCoverFace) els.book3dCoverFace.style.background = bg;
     if (els.book3dCoverTitle) { els.book3dCoverTitle.style.fontFamily = `'${font}',serif`; els.book3dCoverTitle.style.color = theme.text; }
   }
