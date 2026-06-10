@@ -1468,32 +1468,14 @@
       font-weight: 800;
     }
 
-    .album-tile-actions {
+    .album-tile-hint {
       position: relative;
-      z-index: 2;
-      display: flex;
-      gap: 4px;
-      margin-top: 6px;
+      z-index: 1;
+      font-size: .6rem;
+      color: rgba(106,64,31,.45);
+      margin-top: 5px;
+      line-height: 1.2;
     }
-
-    .album-tile-btn {
-      flex: 1;
-      border: 1px solid rgba(106,64,31,.22);
-      border-radius: 7px;
-      background: rgba(255,255,255,.55);
-      color: var(--brown);
-      font-size: .7rem;
-      font-weight: 700;
-      padding: 3px 4px;
-      cursor: pointer;
-      line-height: 1;
-      transition: background .15s;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .album-tile-btn:hover { background: rgba(255,255,255,.85); }
-    .album-tile-btn.del { color: #c0392b; border-color: rgba(192,57,43,.28); }
-    .album-tile-btn.del:hover { background: rgba(255,220,220,.75); }
 
     .album-tile-rename-input {
       position: relative;
@@ -3538,19 +3520,64 @@
       button.innerHTML = `
         <span class="album-tile-title">${escapeHtml(item.title)}</span>
         <span class="album-tile-meta">${albumPageText((item.pages || []).length)}</span>
-        <div class="album-tile-actions">
-          <button class="album-tile-btn ren" type="button" title="Rename">✏️</button>
-          <button class="album-tile-btn del" type="button" title="Delete">🗑</button>
-        </div>`;
-      button.addEventListener('click', () => selectAlbumBook(item.id));
-      button.querySelector('.ren').addEventListener('click', e => {
-        e.stopPropagation();
-        startRenameAlbum(item.id, button);
+        <span class="album-tile-hint">↑ swipe to delete · tap twice to rename</span>`;
+
+      /* ── Double-tap to rename ── */
+      let lastTap = 0;
+      button.addEventListener('click', () => {
+        const now = Date.now();
+        if (now - lastTap < 350) {
+          lastTap = 0;
+          startRenameAlbum(item.id, button);
+        } else {
+          lastTap = now;
+          selectAlbumBook(item.id);
+        }
       });
-      button.querySelector('.del').addEventListener('click', e => {
-        e.stopPropagation();
-        deleteAlbumBook(item.id);
+
+      /* ── Swipe up to delete ── */
+      let swipeY0 = null, swipeX0 = null, isSwiping = false;
+      button.addEventListener('pointerdown', e => {
+        swipeY0 = e.clientY;
+        swipeX0 = e.clientX;
+        isSwiping = false;
+        button.style.transition = '';
       });
+      button.addEventListener('pointermove', e => {
+        if (swipeY0 === null) return;
+        const dy = swipeY0 - e.clientY;
+        const dx = Math.abs(e.clientX - swipeX0);
+        if (dy > 8 && dy > dx) {
+          isSwiping = true;
+          const travel = Math.min(dy, 90);
+          button.style.transform = `translateY(-${travel}px)`;
+          button.style.opacity = `${Math.max(0.15, 1 - travel / 90)}`;
+        }
+      });
+      button.addEventListener('pointerup', e => {
+        if (!isSwiping) { swipeY0 = null; swipeX0 = null; return; }
+        const dy = swipeY0 - e.clientY;
+        swipeY0 = null; swipeX0 = null; isSwiping = false;
+        if (dy > 50) {
+          button.style.transition = 'transform .18s ease, opacity .18s ease';
+          button.style.transform = 'translateY(-130px)';
+          button.style.opacity = '0';
+          setTimeout(() => deleteAlbumBook(item.id), 180);
+        } else {
+          button.style.transition = 'transform .2s ease, opacity .2s ease';
+          button.style.transform = '';
+          button.style.opacity = '';
+          setTimeout(() => { button.style.transition = ''; }, 200);
+        }
+      });
+      button.addEventListener('pointercancel', () => {
+        swipeY0 = null; swipeX0 = null; isSwiping = false;
+        button.style.transition = 'transform .2s ease, opacity .2s ease';
+        button.style.transform = '';
+        button.style.opacity = '';
+        setTimeout(() => { button.style.transition = ''; }, 200);
+      });
+
       els.albumShelf.append(button);
     });
   }
@@ -3630,10 +3657,12 @@
     const album = state.albums.find(a => a.id === id);
     if (!album) return;
     const titleEl = tileEl.querySelector('.album-tile-title');
-    const actionsEl = tileEl.querySelector('.album-tile-actions');
+    const metaEl  = tileEl.querySelector('.album-tile-meta');
+    const hintEl  = tileEl.querySelector('.album-tile-hint');
     if (!titleEl) return;
     titleEl.style.display = 'none';
-    actionsEl.style.display = 'none';
+    if (metaEl) metaEl.style.display = 'none';
+    if (hintEl) hintEl.style.display = 'none';
     const input = document.createElement('input');
     input.className = 'album-tile-rename-input';
     input.value = album.title;
@@ -3641,6 +3670,11 @@
     tileEl.appendChild(input);
     input.focus();
     input.select();
+    function restore() {
+      titleEl.style.display = '';
+      if (metaEl) metaEl.style.display = '';
+      if (hintEl) hintEl.style.display = '';
+    }
     function commit() {
       const newTitle = input.value.trim() || album.title;
       album.title = newTitle;
@@ -3651,7 +3685,7 @@
     }
     input.addEventListener('keydown', e => {
       if (e.key === 'Enter') { e.preventDefault(); commit(); }
-      if (e.key === 'Escape') { input.remove(); titleEl.style.display = ''; actionsEl.style.display = ''; }
+      if (e.key === 'Escape') { input.remove(); restore(); }
     });
     input.addEventListener('blur', commit);
   }
