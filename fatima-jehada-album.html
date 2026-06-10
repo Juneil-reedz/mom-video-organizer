@@ -1589,6 +1589,18 @@
       filter: drop-shadow(0 38px 52px rgba(106,64,31,.34));
     }
 
+    @keyframes coverFlipOpen {
+      0%   { transform: rotateY(-20deg) rotateX(3deg); opacity: 1; }
+      30%  { transform: rotateY(-30deg) rotateX(6deg) translateY(-12px); opacity: 1; }
+      70%  { transform: rotateY(-140deg) rotateX(2deg) translateX(-18px); opacity: .7; }
+      100% { transform: rotateY(-175deg) rotateX(0deg) translateX(-24px); opacity: 0; }
+    }
+
+    .book3d-cover-btn.opening {
+      animation: coverFlipOpen .65s cubic-bezier(.4,0,.2,1) forwards;
+      pointer-events: none;
+    }
+
     .book3d-spine {
       position: absolute;
       left: 0;
@@ -3894,15 +3906,21 @@
   }
 
   function openBook() {
-    state.bookOpen = true;
-    document.querySelector('#bookClosed').style.display = 'none';
-    document.querySelector('#bookOpen').classList.add('visible');
-    document.querySelector('#closeBookBtn').style.display = '';
-    document.querySelector('#bookSubtitle').textContent = 'Tap corners or swipe to flip pages';
-    const pages = bookPages();
-    state.pageIndex = Math.max(0, Math.min(state.pageIndex, pages.length - 1));
-    fillPage(document.querySelector('#bpageCurrent'), pages[state.pageIndex]);
-    updateCounter();
+    if (state.bookOpen) return;
+    const coverBtn = document.querySelector('#bookCover');
+    coverBtn.classList.add('opening');
+    coverBtn.addEventListener('animationend', () => {
+      state.bookOpen = true;
+      document.querySelector('#bookClosed').style.display = 'none';
+      coverBtn.classList.remove('opening');
+      document.querySelector('#bookOpen').classList.add('visible');
+      document.querySelector('#closeBookBtn').style.display = '';
+      document.querySelector('#bookSubtitle').textContent = 'Tap corners or swipe to flip pages';
+      const pages = bookPages();
+      state.pageIndex = Math.max(0, Math.min(state.pageIndex, pages.length - 1));
+      renderBook();
+      updateCounter();
+    }, { once: true });
   }
 
   function closeBook() {
