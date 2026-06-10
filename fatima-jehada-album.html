@@ -3520,7 +3520,7 @@
       button.innerHTML = `
         <span class="album-tile-title">${escapeHtml(item.title)}</span>
         <span class="album-tile-meta">${albumPageText((item.pages || []).length)}</span>
-        <span class="album-tile-hint">↑ swipe to delete · tap twice to rename</span>`;
+        <span class="album-tile-hint">hold to delete · tap twice to rename</span>`;
 
       /* ── Double-tap to rename ── */
       let lastTap = 0;
@@ -3535,47 +3535,35 @@
         }
       });
 
-      /* ── Swipe up to delete ── */
-      let swipeY0 = null, swipeX0 = null, isSwiping = false;
-      button.addEventListener('pointerdown', e => {
-        swipeY0 = e.clientY;
-        swipeX0 = e.clientX;
-        isSwiping = false;
-        button.style.transition = '';
-      });
-      button.addEventListener('pointermove', e => {
-        if (swipeY0 === null) return;
-        const dy = swipeY0 - e.clientY;
-        const dx = Math.abs(e.clientX - swipeX0);
-        if (dy > 8 && dy > dx) {
-          isSwiping = true;
-          const travel = Math.min(dy, 90);
-          button.style.transform = `translateY(-${travel}px)`;
-          button.style.opacity = `${Math.max(0.15, 1 - travel / 90)}`;
-        }
-      });
-      button.addEventListener('pointerup', e => {
-        if (!isSwiping) { swipeY0 = null; swipeX0 = null; return; }
-        const dy = swipeY0 - e.clientY;
-        swipeY0 = null; swipeX0 = null; isSwiping = false;
-        if (dy > 50) {
-          button.style.transition = 'transform .18s ease, opacity .18s ease';
-          button.style.transform = 'translateY(-130px)';
-          button.style.opacity = '0';
-          setTimeout(() => deleteAlbumBook(item.id), 180);
-        } else {
-          button.style.transition = 'transform .2s ease, opacity .2s ease';
+      /* ── Long-press to delete ── */
+      let holdTimer = null, holdFired = false;
+      button.addEventListener('pointerdown', () => {
+        holdFired = false;
+        button.style.transition = 'transform .7s ease, opacity .7s ease';
+        button.style.transform = 'scale(0.92)';
+        holdTimer = setTimeout(() => {
+          holdFired = true;
+          button.style.transition = '';
           button.style.transform = '';
           button.style.opacity = '';
-          setTimeout(() => { button.style.transition = ''; }, 200);
-        }
+          deleteAlbumBook(item.id);
+        }, 700);
       });
-      button.addEventListener('pointercancel', () => {
-        swipeY0 = null; swipeX0 = null; isSwiping = false;
-        button.style.transition = 'transform .2s ease, opacity .2s ease';
-        button.style.transform = '';
-        button.style.opacity = '';
-        setTimeout(() => { button.style.transition = ''; }, 200);
+      const cancelHold = () => {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+        if (!holdFired) {
+          button.style.transition = 'transform .15s ease, opacity .15s ease';
+          button.style.transform = '';
+          button.style.opacity = '';
+          setTimeout(() => { button.style.transition = ''; }, 150);
+        }
+      };
+      button.addEventListener('pointerup', cancelHold);
+      button.addEventListener('pointercancel', cancelHold);
+      button.addEventListener('pointermove', e => {
+        /* cancel if finger drifts more than 10px */
+        if (holdTimer && (Math.abs(e.movementX) + Math.abs(e.movementY) > 10)) cancelHold();
       });
 
       els.albumShelf.append(button);
