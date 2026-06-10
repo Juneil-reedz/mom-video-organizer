@@ -14,7 +14,7 @@
   <link rel="icon" href="fatima-favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&family=Playfair+Display:wght@700;800&family=Dancing+Script:wght@600;700&family=Lora:wght@600;700&family=Pacifico&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --ink: #2d1f14;
@@ -1360,10 +1360,9 @@
     }
 
     .album-shelf-form {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 8px;
-      align-items: center;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
       padding-inline: 4px;
     }
 
@@ -1379,6 +1378,62 @@
     }
 
     .album-shelf-form input:focus {
+      border-color: rgba(244,124,168,.58);
+      box-shadow: 0 0 0 3px rgba(244,124,168,.14);
+    }
+
+    .album-form-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .album-cover-pickers {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .album-cover-swatches {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .cover-swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2.5px solid transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform .15s, border-color .15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .cover-swatch.selected {
+      border-color: rgba(106,64,31,.7);
+      transform: scale(1.18);
+    }
+
+    .album-cover-font {
+      flex: 1;
+      min-width: 130px;
+      height: 32px;
+      border-radius: 10px;
+      border: 1px solid rgba(217,147,0,.26);
+      background: rgba(255,255,255,.78);
+      color: var(--brown);
+      font-size: .8rem;
+      padding: 0 8px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .album-cover-font:focus {
       border-color: rgba(244,124,168,.58);
       box-shadow: 0 0 0 3px rgba(244,124,168,.14);
     }
@@ -1463,7 +1518,8 @@
     .album-tile-meta {
       position: relative;
       z-index: 1;
-      color: var(--muted);
+      color: inherit;
+      opacity: .65;
       font-size: .72rem;
       font-weight: 800;
     }
@@ -1472,7 +1528,8 @@
       position: relative;
       z-index: 1;
       font-size: .6rem;
-      color: rgba(106,64,31,.45);
+      color: inherit;
+      opacity: .42;
       margin-top: 5px;
       line-height: 1.2;
     }
@@ -2792,8 +2849,21 @@
 
       <div class="album-shelf" aria-label="Album books">
         <div class="album-shelf-form">
-          <input id="newAlbumTitle" type="text" placeholder="New book title">
-          <button class="btn btn-gold" id="addAlbumBtn" type="button">Add Book</button>
+          <div class="album-form-row">
+            <input id="newAlbumTitle" type="text" placeholder="New book title">
+            <button class="btn btn-gold" id="addAlbumBtn" type="button">Add Book</button>
+          </div>
+          <div class="album-cover-pickers">
+            <div class="album-cover-swatches" id="albumCoverSwatches"></div>
+            <select class="album-cover-font" id="albumCoverFont">
+              <option value="Playfair Display">Playfair Display</option>
+              <option value="Nunito">Nunito</option>
+              <option value="Dancing Script">Dancing Script</option>
+              <option value="Lora">Lora</option>
+              <option value="Pacifico">Pacifico</option>
+              <option value="Montserrat">Montserrat</option>
+            </select>
+          </div>
         </div>
         <div class="album-shelf-track" id="albumShelf" aria-label="Choose album book"></div>
       </div>
@@ -2971,9 +3041,22 @@
     }
   }
 
-  function makeAlbum(title, pages = []) {
+  const COVER_THEMES = [
+    { id: 'rose',     grad: ['#ffe1ec','#fff5d5','#ffd95d'], text: '#5c3317' },
+    { id: 'cherry',   grad: ['#fce7f3','#f9a8d4','#be185d'], text: '#4a0020' },
+    { id: 'coral',    grad: ['#ffd6cc','#ff9980','#e85d3d'], text: '#5a1a0a' },
+    { id: 'gold',     grad: ['#fef9c3','#fde047','#ca8a04'], text: '#3d2a00' },
+    { id: 'forest',   grad: ['#d1fae5','#6ee7b7','#059669'], text: '#064e3b' },
+    { id: 'ocean',    grad: ['#cffafe','#67e8f9','#0891b2'], text: '#0c4a6e' },
+    { id: 'blue',     grad: ['#dbeafe','#93c5fd','#3b82f6'], text: '#1e3a5f' },
+    { id: 'lavender', grad: ['#ede9fe','#c4b5fd','#7c3aed'], text: '#2e1065' },
+    { id: 'slate',    grad: ['#e2e8f0','#94a3b8','#334155'], text: '#f1f5f9' },
+    { id: 'night',    grad: ['#1e1b4b','#312e81','#4f46e5'], text: '#e0e7ff' },
+  ];
+
+  function makeAlbum(title, pages = [], coverTheme = 'rose', coverFont = 'Playfair Display') {
     const id = crypto.randomUUID ? crypto.randomUUID() : `album-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    return { id, title: title || 'Fatima Album', pages, createdAt: Date.now(), updatedAt: Date.now() };
+    return { id, title: title || 'Fatima Album', pages, coverTheme, coverFont, createdAt: Date.now(), updatedAt: Date.now() };
   }
 
   function normalizeAlbums(savedAlbums, legacyPages) {
@@ -3028,6 +3111,8 @@
     closeBook: document.querySelector('#closeBookBtn'),
     newAlbumTitle: document.querySelector('#newAlbumTitle'),
     addAlbum: document.querySelector('#addAlbumBtn'),
+    albumCoverSwatches: document.querySelector('#albumCoverSwatches'),
+    albumCoverFont: document.querySelector('#albumCoverFont'),
     albumShelf: document.querySelector('#albumShelf'),
     activeAlbumTitle: document.querySelector('#activeAlbumTitle'),
     bookCoverTitle: document.querySelector('#bookCoverTitle'),
@@ -3517,8 +3602,15 @@
       button.className = `album-tile${item.id === state.activeAlbumId ? ' active' : ''}`;
       button.type = 'button';
       button.dataset.albumId = item.id;
+      const theme = COVER_THEMES.find(t => t.id === item.coverTheme) || COVER_THEMES[0];
+      const tileFont = item.coverFont || 'Playfair Display';
+      button.style.background = `
+        linear-gradient(100deg, rgba(0,0,0,.14) 0%, transparent 18%),
+        radial-gradient(circle at 48% 22%, rgba(255,255,255,.28), transparent 30%),
+        linear-gradient(135deg, ${theme.grad[0]} 0%, ${theme.grad[1]} 62%, ${theme.grad[2]} 100%)`;
+      button.style.color = theme.text;
       button.innerHTML = `
-        <span class="album-tile-title">${escapeHtml(item.title)}</span>
+        <span class="album-tile-title" style="font-family:'${tileFont}',serif">${escapeHtml(item.title)}</span>
         <span class="album-tile-meta">${albumPageText((item.pages || []).length)}</span>
         <span class="album-tile-hint">hold to delete · tap twice to rename</span>`;
 
@@ -3597,9 +3689,16 @@
     renderBook();
   }
 
+  function selectedCoverTheme() {
+    const el = els.albumCoverSwatches?.querySelector('.cover-swatch.selected');
+    return el?.dataset.themeId || 'rose';
+  }
+
   function addAlbumBook() {
     const title = els.newAlbumTitle?.value.trim() || `Fatima Album ${state.albums.length + 1}`;
-    const album = makeAlbum(title, []);
+    const coverTheme = selectedCoverTheme();
+    const coverFont = els.albumCoverFont?.value || 'Playfair Display';
+    const album = makeAlbum(title, [], coverTheme, coverFont);
     state.albums.unshift(album);
     state.activeAlbumId = album.id;
     state.pages = album.pages;
@@ -4103,6 +4202,23 @@
     e.preventDefault();
     addAlbumBook();
   });
+
+  /* ── Cover swatch picker init ── */
+  if (els.albumCoverSwatches) {
+    COVER_THEMES.forEach((theme, i) => {
+      const swatch = document.createElement('button');
+      swatch.type = 'button';
+      swatch.className = `cover-swatch${i === 0 ? ' selected' : ''}`;
+      swatch.dataset.themeId = theme.id;
+      swatch.title = theme.id.charAt(0).toUpperCase() + theme.id.slice(1);
+      swatch.style.background = `linear-gradient(135deg, ${theme.grad[0]}, ${theme.grad[2]})`;
+      swatch.addEventListener('click', () => {
+        els.albumCoverSwatches.querySelectorAll('.cover-swatch').forEach(s => s.classList.remove('selected'));
+        swatch.classList.add('selected');
+      });
+      els.albumCoverSwatches.appendChild(swatch);
+    });
+  }
 
   const frontPage = document.querySelector('#frontPage');
   const frontCoverBtn = document.querySelector('#frontCoverBtn');
