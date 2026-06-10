@@ -3043,16 +3043,16 @@
   }
 
   const COVER_THEMES = [
-    { id: 'rose',     grad: ['#ffe1ec','#fff5d5','#ffd95d'], text: '#5c3317' },
-    { id: 'cherry',   grad: ['#fce7f3','#f9a8d4','#be185d'], text: '#4a0020' },
-    { id: 'coral',    grad: ['#ffd6cc','#ff9980','#e85d3d'], text: '#5a1a0a' },
-    { id: 'gold',     grad: ['#fef9c3','#fde047','#ca8a04'], text: '#3d2a00' },
-    { id: 'forest',   grad: ['#d1fae5','#6ee7b7','#059669'], text: '#064e3b' },
-    { id: 'ocean',    grad: ['#cffafe','#67e8f9','#0891b2'], text: '#0c4a6e' },
-    { id: 'blue',     grad: ['#dbeafe','#93c5fd','#3b82f6'], text: '#1e3a5f' },
-    { id: 'lavender', grad: ['#ede9fe','#c4b5fd','#7c3aed'], text: '#2e1065' },
-    { id: 'slate',    grad: ['#e2e8f0','#94a3b8','#334155'], text: '#f1f5f9' },
-    { id: 'night',    grad: ['#1e1b4b','#312e81','#4f46e5'], text: '#e0e7ff' },
+    { id: 'rose',     grad: ['#ffd6e7','#f472b6','#9d174d'], text: '#fff0f5' },
+    { id: 'cherry',   grad: ['#fca5a5','#ef4444','#7f1d1d'], text: '#fff5f5' },
+    { id: 'coral',    grad: ['#fed7aa','#f97316','#7c2d12'], text: '#fff7ed' },
+    { id: 'gold',     grad: ['#fef08a','#eab308','#713f12'], text: '#fefce8' },
+    { id: 'forest',   grad: ['#86efac','#22c55e','#14532d'], text: '#f0fdf4' },
+    { id: 'ocean',    grad: ['#67e8f9','#06b6d4','#164e63'], text: '#ecfeff' },
+    { id: 'blue',     grad: ['#93c5fd','#3b82f6','#1e3a8a'], text: '#eff6ff' },
+    { id: 'lavender', grad: ['#d8b4fe','#a855f7','#581c87'], text: '#faf5ff' },
+    { id: 'slate',    grad: ['#cbd5e1','#64748b','#0f172a'], text: '#f8fafc' },
+    { id: 'night',    grad: ['#818cf8','#4f46e5','#1e1b4b'], text: '#e0e7ff' },
   ];
 
   function makeAlbum(title, pages = [], coverTheme = 'rose', coverFont = 'Playfair Display') {
@@ -3597,14 +3597,17 @@
     return `${count} page${count === 1 ? '' : 's'}`;
   }
 
+  function coverGradient(theme) {
+    return `
+      linear-gradient(100deg, rgba(0,0,0,.32) 0%, transparent 22%),
+      linear-gradient(160deg, rgba(255,255,255,.14) 0%, transparent 42%),
+      linear-gradient(150deg, ${theme.grad[0]} 0%, ${theme.grad[1]} 52%, ${theme.grad[2]} 100%)`;
+  }
+
   function applyCoverTheme(album) {
     const theme = COVER_THEMES.find(t => t.id === album.coverTheme) || COVER_THEMES[0];
     const font  = album.coverFont || 'Playfair Display';
-    const bg = `
-      linear-gradient(100deg, rgba(0,0,0,.16) 0%, transparent 16%),
-      radial-gradient(circle at 48% 22%, rgba(255,255,255,.28), transparent 30%),
-      linear-gradient(135deg, ${theme.grad[0]} 0%, ${theme.grad[1]} 62%, ${theme.grad[2]} 100%)`;
-    if (els.book3dCoverFace) els.book3dCoverFace.style.background = bg;
+    if (els.book3dCoverFace) els.book3dCoverFace.style.background = coverGradient(theme);
     if (els.book3dCoverTitle) { els.book3dCoverTitle.style.fontFamily = `'${font}',serif`; els.book3dCoverTitle.style.color = theme.text; }
   }
 
@@ -3623,10 +3626,7 @@
       button.dataset.albumId = item.id;
       const theme = COVER_THEMES.find(t => t.id === item.coverTheme) || COVER_THEMES[0];
       const tileFont = item.coverFont || 'Playfair Display';
-      button.style.background = `
-        linear-gradient(100deg, rgba(0,0,0,.14) 0%, transparent 18%),
-        radial-gradient(circle at 48% 22%, rgba(255,255,255,.28), transparent 30%),
-        linear-gradient(135deg, ${theme.grad[0]} 0%, ${theme.grad[1]} 62%, ${theme.grad[2]} 100%)`;
+      button.style.background = coverGradient(theme);
       button.style.color = theme.text;
       button.innerHTML = `
         <span class="album-tile-title" style="font-family:'${tileFont}',serif">${escapeHtml(item.title)}</span>
